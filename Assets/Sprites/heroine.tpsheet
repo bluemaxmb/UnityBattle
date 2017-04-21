@@ -1,0 +1,22 @@
+#
+# Sprite sheet data for Unity.
+#
+# To import these sprites into your Unity project, download "TexturePackerImporter":
+# http://www.codeandweb.com/texturepacker/unity
+#
+# $TexturePacker:SmartUpdate:6025cb95887a24cdda5ab440d0917664:9ae1407dbc4aad6ec52762c868e76b5c:adb385ea3f2f449dd64eaa5e431b5b0a$
+#
+:format=40300
+:texture=heroine.png
+:size=64x64
+:pivotpoints=enabled
+:borders=disabled
+
+heroine_e_01;1;47;16;16; 0.5;0.5; 0;0;0;0; 4;16;0;0;0;0;16;16;16; 2;1;2;3;0;1;3
+heroine_e_02;1;29;16;16; 0.5;0.5; 0;0;0;0; 4;16;0;0;0;0;16;16;16; 2;1;2;3;0;1;3
+heroine_n_01;1;11;16;16; 0.5;0.5; 0;0;0;0; 4;16;0;0;0;0;16;16;16; 2;1;2;3;0;1;3
+heroine_n_02;19;47;16;16; 0.5;0.5; 0;0;0;0; 4;16;0;0;0;0;16;16;16; 2;1;2;3;0;1;3
+heroine_s_01;37;47;16;16; 0.5;0.5; 0;0;0;0; 4;16;0;0;0;0;16;16;16; 2;1;2;3;0;1;3
+heroine_s_02;19;29;16;16; 0.5;0.5; 0;0;0;0; 5;16;7;16;0;0;0;0;16;15;16; 3;0;3;4;0;1;2;0;2;3
+heroine_w_01;19;11;16;16; 0.5;0.5; 0;0;0;0; 4;16;0;0;0;0;16;16;16; 2;1;2;3;0;1;3
+heroine_w_02;37;29;16;16; 0.5;0.5; 0;0;0;0; 4;16;0;0;0;0;16;16;16; 2;1;2;3;0;1;3

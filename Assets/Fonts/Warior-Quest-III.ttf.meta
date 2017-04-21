@@ -1,0 +1,21 @@
+fileFormatVersion: 2
+guid: 42613117ce34441af8638697fbcd18b4
+timeCreated: 1492456972
+licenseType: Free
+TrueTypeFontImporter:
+  serializedVersion: 4
+  fontSize: 16
+  forceTextureCase: -2
+  characterSpacing: 0
+  characterPadding: 1
+  includeFontData: 1
+  fontName: Warrior Quest III
+  fontNames:
+  - Warrior Quest III
+  fallbackFontReferences: []
+  customCharacters: 
+  fontRenderingMode: 0
+  ascentCalculationMode: 1
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
