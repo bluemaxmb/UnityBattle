@@ -27,6 +27,8 @@ public class BattleManager : MonoBehaviour
 	[SerializeField] GameObject[] m_heroPrefabs;
 	[SerializeField] GameObject m_spellButtonPrefab;
 
+	[SerializeField] MagicDatabase m_magicDatabase;
+
 	private enum BattleState 
 	{
 		startCombat,
@@ -40,8 +42,10 @@ public class BattleManager : MonoBehaviour
 	{
 		None,
 		Fight,
-		Magic,
-		Item
+		Magic_Select,
+		Magic_Target,
+		Item_Select,
+		Item_Target
 	}
 
 	private enum CombatActionType
@@ -57,6 +61,7 @@ public class BattleManager : MonoBehaviour
 		public BattleParticipant sourceParticipant;
 		public BattleParticipant targetParticipant;
 		public CombatActionType actionType;
+		public MagicSpellData magicSpellData;
 	}
 
 	private List<PlayableBattleParticipant> m_playerPartyList = new List<PlayableBattleParticipant>();
@@ -64,6 +69,7 @@ public class BattleManager : MonoBehaviour
 	private Queue<CombatAction> m_combatActionQueue = new Queue<CombatAction>();
 	private BattleState m_currentBattleState = BattleState.startCombat;
 	private TargetState m_currentTargetState = TargetState.None;
+	private MagicSpellData m_spellBeingTargeted;
 	private const int m_baseChanceToHit = 168;
 	private int m_currentHero;
 	private int m_aliveHeros;
@@ -121,6 +127,10 @@ public class BattleManager : MonoBehaviour
 				{
 					GameObject spellObject = Instantiate(m_spellButtonPrefab);
 					spellObject.transform.SetParent(m_heroMagicPanels[i].transform, false);
+
+					MagicSpellButton magicSpellButton = spellObject.GetComponentInChildren<MagicSpellButton>();
+					magicSpellButton.onClick.AddListener(() => OnMagicSpellButtonClicked(magicSpellButton));
+					magicSpellButton.SetMagicSpellData(m_magicDatabase.GetMagicSpellData(newParticipant.battleData.spellIndexArray[j]));
 				}							
 			}
 
@@ -189,6 +199,11 @@ public class BattleManager : MonoBehaviour
 
 			m_aliveMonsters++;
 		}
+
+		if (m_aliveHeros < 1)
+		{
+			InitializeMonsterGroupZero();
+		}
 	}
 
 	private void InitializeMonsterGroupOne()
@@ -210,6 +225,11 @@ public class BattleManager : MonoBehaviour
 			tempObject.transform.SetParent(m_monsterFormation2Placements[i], false);
 
 			m_aliveMonsters++;
+		}
+
+		if (m_aliveHeros < 1)
+		{
+			InitializeMonsterGroupOne();
 		}
 	}
 
@@ -250,6 +270,11 @@ public class BattleManager : MonoBehaviour
 			tempObject.transform.SetParent(m_monsterFormation3Placements[i+2], false);
 
 			m_aliveMonsters++;
+		}
+
+		if (m_aliveHeros < 1)
+		{
+			InitializeMonsterGroupTwo();
 		}
 	}
 
@@ -331,6 +356,7 @@ public class BattleManager : MonoBehaviour
 				{
 					m_combatActionQueue.Dequeue();
 					m_currentHero--;
+					m_spellBeingTargeted = null;
 				}
 			}
 		}	
@@ -352,7 +378,21 @@ public class BattleManager : MonoBehaviour
 
 	private void OnMagicButtonClicked()
 	{
+		if (m_currentBattleState == BattleState.playerInput)
+		{
+			Debug.Log("Select Spell! m_currentHero " + m_currentHero);
+			m_currentTargetState = TargetState.Magic_Select;
 
+			if  (!m_heroMagicPanels[m_currentHero].gameObject.activeSelf)
+			{
+				m_heroMagicPanels[m_currentHero].gameObject.SetActive(true);
+			}
+
+			if (!m_btnUndo.gameObject.activeSelf)
+			{
+				m_btnUndo.gameObject.SetActive(true);
+			}
+		}
 	}
 
 	private void OnRunButtonClicked()
@@ -367,6 +407,7 @@ public class BattleManager : MonoBehaviour
 
 	private void OnTargetClicked(Button button)
 	{
+		Debug.Log("button " + button + " target state" + m_currentTargetState + " battle state " + m_currentBattleState);
 
 		switch (m_currentTargetState)	
 		{
@@ -387,6 +428,7 @@ public class BattleManager : MonoBehaviour
 				{
 					action.targetParticipant = null;
 				}
+
 				action.actionType = CombatActionType.Fight;
 
 				m_combatActionQueue.Enqueue(action);
@@ -395,12 +437,37 @@ public class BattleManager : MonoBehaviour
 				Debug.Log(action.sourceParticipant.participantName + " is targeting  " + action.targetParticipant.participantName);
 			}
 			break;
-			case TargetState.Magic:
+		case TargetState.Magic_Target:
 			{
+				CombatAction action = new CombatAction();
+				action.sourceParticipant = m_playerPartyList[m_currentHero];
 
+				//TODO: Pull spell targeting type here from m_spellBeingTargeted
+
+				if (button is EnemyTargetButton)
+				{
+					action.targetParticipant = (button as EnemyTargetButton).battleParticipant;
+				}
+				else if (button is AllyTargetButton)
+				{
+					action.targetParticipant = (button as AllyTargetButton).battleParticipant;
+				}
+				else
+				{
+					action.targetParticipant = null;
+				}
+
+				action.magicSpellData = m_spellBeingTargeted;
+				action.actionType = CombatActionType.Magic;
+
+				m_combatActionQueue.Enqueue(action);
+				m_currentHero++;
+				m_spellBeingTargeted = null;
+
+				Debug.Log(action.sourceParticipant.participantName + " is targeting  " + action.targetParticipant.participantName + " with spell " + action.magicSpellData.spellName);
 			}
 			break;
-			case TargetState.Item:
+		case TargetState.Item_Target:
 			{
 
 			}
@@ -414,6 +481,18 @@ public class BattleManager : MonoBehaviour
 		}
 
 		m_currentTargetState = TargetState.None;
+	}
+
+	private void OnMagicSpellButtonClicked(Button button)
+	{
+		if (m_currentTargetState == TargetState.Magic_Select)
+		{
+			Debug.Log("Select Target! m_currentHero " + m_currentHero);
+			m_currentTargetState = TargetState.Magic_Target;
+			m_spellBeingTargeted = (button as MagicSpellButton).magicSpellData;
+
+			m_heroMagicPanels[m_currentHero].gameObject.SetActive(false);
+		}
 	}
 	#endregion
 
@@ -497,12 +576,12 @@ public class BattleManager : MonoBehaviour
 							else if (hitRoll == 0) 
 							{
 								//Auto Critical
-								DoDamage (action.sourceParticipant, action.targetParticipant, true);
+								DoMeleeDamage (action.sourceParticipant, action.targetParticipant, true);
 
 							} 
 							else if (hitRoll <= chanceToHit) 
 							{
-								DoDamage (action.sourceParticipant, action.targetParticipant, hitRoll <= action.sourceParticipant.CritChance ());
+								DoMeleeDamage (action.sourceParticipant, action.targetParticipant, hitRoll <= action.sourceParticipant.CritChance ());
 							}
 							else 
 							{
@@ -514,7 +593,7 @@ public class BattleManager : MonoBehaviour
 					break;
 				case CombatActionType.Magic:
 					{
-
+						Debug.Log (action.sourceParticipant.participantName + " casts " + action.magicSpellData.spellName + " on " + action.targetParticipant.participantName);
 					}
 					break;
 				case CombatActionType.Item:
@@ -539,7 +618,7 @@ public class BattleManager : MonoBehaviour
 		}
 	}
 
-	private void DoDamage(BattleParticipant sourceParticipant, BattleParticipant targetParticipant, bool isCritical)
+	private void DoMeleeDamage(BattleParticipant sourceParticipant, BattleParticipant targetParticipant, bool isCritical)
 	{
 		int totalDamage = 0;
 
