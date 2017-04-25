@@ -6,6 +6,8 @@ public class PlayableBattleParticipant : BattleParticipant
 {
 	[SerializeField] AllyBattleParticipantData m_battleData;
 
+	public AllyBattleParticipantData battleData { get { return m_battleData; }}
+
 	public override void Init()
 	{
 		m_name = m_battleData.participantName;

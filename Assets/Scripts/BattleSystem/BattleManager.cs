@@ -21,9 +21,11 @@ public class BattleManager : MonoBehaviour
 	[SerializeField] Transform[] m_monsterFormation3Placements;
 	[SerializeField] Transform[] m_bossPlacement;
 	[SerializeField] Transform[] m_heroPlacements;
+	[SerializeField] GridLayoutGroup[] m_heroMagicPanels;
 
 	[SerializeField] GameObject[] m_monsterPrefabs;
 	[SerializeField] GameObject[] m_heroPrefabs;
+	[SerializeField] GameObject m_spellButtonPrefab;
 
 	private enum BattleState 
 	{
@@ -112,6 +114,17 @@ public class BattleManager : MonoBehaviour
 			PlayableBattleParticipant newParticipant = tempObject.GetComponentInChildren<PlayableBattleParticipant>();
 			newParticipant.Init();
 			m_playerPartyList.Add(newParticipant);
+
+			if (newParticipant.battleData.spellIndexArray.Length > 0)
+			{
+				for (int j=0;j< newParticipant.battleData.spellIndexArray.Length;++j)
+				{
+					GameObject spellObject = Instantiate(m_spellButtonPrefab);
+					spellObject.transform.SetParent(m_heroMagicPanels[i].transform, false);
+				}							
+			}
+
+			m_heroMagicPanels[i].gameObject.SetActive(false);
 
 			AllyTargetButton targetButton = tempObject.GetComponentInChildren<AllyTargetButton>();
 			targetButton.onClick.AddListener(() => OnTargetClicked(targetButton));

@@ -9,4 +9,5 @@ public class BattleParticipantData : ScriptableObject
 	public int maxHP;
 	public int currentMP;
 	public int maxMP;
+	public int [] spellIndexArray;
 }
