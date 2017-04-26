@@ -555,45 +555,12 @@ public class BattleManager : MonoBehaviour
 				{
 				case CombatActionType.Fight:
 					{						
-						if (action.targetParticipant.currentHP < 0)
-						{
-							Debug.Log (action.sourceParticipant.participantName + " is ineffective!");
-						}
-						else
-						{
-							int chanceToHit = (m_baseChanceToHit + action.sourceParticipant.Accuracy ()) - action.targetParticipant.Evasion ();
-							int hitRoll = UnityEngine.Random.Range (0, 200);
-
-							/*
-								If that
-								number is less than or equal to the Chance to Hit, the Hit connects. 0 is an
-								automatic hit, and 200 is an automatic miss. */
-							if (hitRoll == 200)
-							{
-								//Miss
-								Debug.Log (action.sourceParticipant.participantName + " misses " + action.targetParticipant.participantName);
-							} 
-							else if (hitRoll == 0) 
-							{
-								//Auto Critical
-								DoMeleeDamage (action.sourceParticipant, action.targetParticipant, true);
-
-							} 
-							else if (hitRoll <= chanceToHit) 
-							{
-								DoMeleeDamage (action.sourceParticipant, action.targetParticipant, hitRoll <= action.sourceParticipant.CritChance ());
-							}
-							else 
-							{
-								//Also miss
-								Debug.Log (action.sourceParticipant.participantName + " misses " + action.targetParticipant.participantName);
-							} 
-						}
+						DoMeleeHitRoll(action.sourceParticipant, action.targetParticipant);
 					}
 					break;
 				case CombatActionType.Magic:
 					{
-						Debug.Log (action.sourceParticipant.participantName + " casts " + action.magicSpellData.spellName + " on " + action.targetParticipant.participantName);
+						DoSpellEffect(action.sourceParticipant, action.targetParticipant, action.magicSpellData);
 					}
 					break;
 				case CombatActionType.Item:
@@ -615,6 +582,44 @@ public class BattleManager : MonoBehaviour
 			{
 				break;
 			}
+		}
+	}
+
+	private void DoMeleeHitRoll(BattleParticipant sourceParticipant, BattleParticipant targetParticipant)
+	{
+		if (targetParticipant.currentHP < 0)
+		{
+			Debug.Log (sourceParticipant.participantName + " is ineffective!");
+		}
+		else
+		{
+			int chanceToHit = (m_baseChanceToHit + sourceParticipant.Accuracy ()) - targetParticipant.Evasion ();
+			int hitRoll = UnityEngine.Random.Range (0, 200);
+
+			/*
+								If that
+								number is less than or equal to the Chance to Hit, the Hit connects. 0 is an
+								automatic hit, and 200 is an automatic miss. */
+			if (hitRoll == 200)
+			{
+				//Miss
+				Debug.Log (sourceParticipant.participantName + " misses " + targetParticipant.participantName);
+			} 
+			else if (hitRoll == 0) 
+			{
+				//Auto Critical
+				DoMeleeDamage (sourceParticipant, targetParticipant, true);
+
+			} 
+			else if (hitRoll <= chanceToHit) 
+			{
+				DoMeleeDamage (sourceParticipant, targetParticipant, hitRoll <= sourceParticipant.CritChance ());
+			}
+			else 
+			{
+				//Also miss
+				Debug.Log (sourceParticipant.participantName + " misses " + targetParticipant.participantName);
+			} 
 		}
 	}
 
@@ -660,6 +665,128 @@ public class BattleManager : MonoBehaviour
 				m_aliveMonsters--;
 				targetParticipant.gameObject.SetActive(false);
 			}
+		}
+	}
+
+	private void DoMagicHitRoll(BattleParticipant sourceParticipant, BattleParticipant targetParticipant, MagicSpellData magicSpellData)
+	{
+		if (targetParticipant.currentHP < 0)
+		{
+			Debug.Log (sourceParticipant.participantName + " is ineffective!");
+		}
+		else
+		{
+			/* TODO:
+			 	1) Base Chance to Hit = 148
+				--If the target is Resistant to the spell's element, set BC to 0
+				--If the target is Weak to the spell's element, add +40 to BC
+
+				NOTE: If a target is both Resistant and Weak, the base chance is set to 0, but
+				40 is still added, resulting in BC = 40.
+			*/
+			int chanceToHit = (m_baseChanceToHit + magicSpellData.accuracy) - targetParticipant.MagicDefense();
+			int hitRoll = UnityEngine.Random.Range (0, 200);
+
+			/*
+								If that
+								number is less than or equal to the Chance to Hit, the Hit connects. 0 is an
+								automatic hit, and 200 is an automatic miss. */
+			if (hitRoll == 200)
+			{
+				//Resisted
+				Debug.Log (targetParticipant.participantName + " resisted " + sourceParticipant.participantName + "'s spell");
+				DoMagicEffect(sourceParticipant, targetParticipant, magicSpellData, true);
+			} 
+			else if (hitRoll == 0) 
+			{
+				//Auto Unresisted
+				DoMagicEffect(sourceParticipant, targetParticipant, magicSpellData, false);
+
+			} 
+			else if (hitRoll <= chanceToHit) 
+			{
+				DoMagicEffect(sourceParticipant, targetParticipant, magicSpellData, false);
+			}
+			else 
+			{
+				//Also resisted
+				Debug.Log (targetParticipant.participantName + " resisted " + sourceParticipant.participantName + "'s spell");
+				DoMagicEffect(sourceParticipant, targetParticipant, magicSpellData, true);
+			} 
+		}
+	}
+
+	private void DoMagicEffect (BattleParticipant sourceParticipant, BattleParticipant targetParticipant, MagicSpellData magicSpellData, bool wasResisted)
+	{
+		switch (magicSpellData.spellEffect) 
+		{
+		case SpellEffect.Damage:
+			{
+				// TODO:
+				// --If target is resistant to spell element, divide effectivity by 2
+				// --If the target is weak to spell element, multiply effectivity by 1.5
+
+				int spellDamage = 0;
+				if (wasResisted)
+				{
+					spellDamage = UnityEngine.Random.Range (magicSpellData.effectiveness, 2 * magicSpellData.effectiveness);
+				}
+				else
+				{
+					spellDamage = 2 * (UnityEngine.Random.Range (magicSpellData.effectiveness, 2 * magicSpellData.effectiveness));
+				}
+
+				Debug.Log (sourceParticipant.participantName + " casts " +  magicSpellData.spellName + " on " + targetParticipant.participantName + " for " + spellDamage + " damage.");
+
+				targetParticipant.currentHP -= spellDamage;
+
+				if (targetParticipant.currentHP <= 0)
+				{
+					Debug.Log(targetParticipant.participantName + " has died!");
+					targetParticipant.currentHP = 0;
+					if (targetParticipant is PlayableBattleParticipant) 
+					{
+						m_aliveHeros--;
+					} 
+					else if (targetParticipant is EnemyBattleParticipant) 
+					{
+						m_aliveMonsters--;
+						targetParticipant.gameObject.SetActive(false);
+					}
+				}
+			}
+			break;
+		case SpellEffect.Heal:
+		default:
+			{
+				Debug.Log ("Should never happen.");
+			}
+			break;
+		}
+	}
+
+	private void DoSpellEffect (BattleParticipant sourceParticipant, BattleParticipant targetParticipant, MagicSpellData magicSpellData)
+	{
+		if (magicSpellData.spellEffect == SpellEffect.Heal)
+		{
+			if (targetParticipant.currentHP > 0) 
+			{
+				int healAmount = UnityEngine.Random.Range (magicSpellData.effectiveness, 2 * magicSpellData.effectiveness);
+				targetParticipant.currentHP += healAmount;
+
+				if (targetParticipant.currentHP > targetParticipant.maxHP) 
+				{
+					targetParticipant.currentHP = targetParticipant.maxHP;
+				}
+			} 
+			else 
+			{
+				Debug.Log (sourceParticipant.participantName + "'s spell is ineffective!");
+			}
+		}
+		else
+		{
+			DoMagicHitRoll (sourceParticipant, targetParticipant, magicSpellData);
 		}
 	}
 

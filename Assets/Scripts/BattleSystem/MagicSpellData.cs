@@ -4,21 +4,6 @@ using UnityEngine;
 
 public class MagicSpellData : ScriptableObject 
 {
-	public enum SpellEffect
-	{
-		Heal,
-		Damage,
-	}
-
-	public enum TargetType
-	{
-		SingleEnemy,
-		SingleAlly,
-		AllEnemies,
-		AllAllies,
-		Caster
-	}
-
 	public string spellName; //TODO: replace with loc id
 	public MagicType magicType;
 	public Element element;

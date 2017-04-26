@@ -22,3 +22,18 @@ public enum Classes
 	WhiteMage,
 	BlackMage
 }
+
+public enum SpellEffect
+{
+	Heal,
+	Damage,
+}
+
+public enum TargetType
+{
+	SingleEnemy,
+	SingleAlly,
+	AllEnemies,
+	AllAllies,
+	Caster
+}
