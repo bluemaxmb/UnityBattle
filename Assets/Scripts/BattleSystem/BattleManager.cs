@@ -408,16 +408,25 @@ public class BattleManager : MonoBehaviour
 		if (m_currentBattleState == BattleState.playerInput)
 		{
 			Debug.Log("Select Spell! m_currentHero " + m_currentHero);
-			m_currentTargetState = TargetState.Magic_Select;
 
-			if  (!m_heroMagicPanels[m_currentHero].gameObject.activeSelf)
+			if (m_playerPartyList[m_currentHero].battleData.spellIndexArray.Length > 0)
 			{
-				m_heroMagicPanels[m_currentHero].gameObject.SetActive(true);
+				m_currentTargetState = TargetState.Magic_Select;
+
+				if  (!m_heroMagicPanels[m_currentHero].gameObject.activeSelf)
+				{
+					m_heroMagicPanels[m_currentHero].gameObject.SetActive(true);
+				}
+
+				if (!m_btnUndo.gameObject.activeSelf)
+				{
+					m_btnUndo.gameObject.SetActive(true);
+				}
 			}
-
-			if (!m_btnUndo.gameObject.activeSelf)
+			else
 			{
-				m_btnUndo.gameObject.SetActive(true);
+				//TODO: Needs in game UI
+				Debug.LogWarning("No spells!");
 			}
 		}
 	}
@@ -514,11 +523,21 @@ public class BattleManager : MonoBehaviour
 	{
 		if (m_currentTargetState == TargetState.Magic_Select)
 		{
-			Debug.Log("Select Target! m_currentHero " + m_currentHero);
-			m_currentTargetState = TargetState.Magic_Target;
-			m_spellBeingTargeted = (button as MagicSpellButton).magicSpellData;
+			MagicSpellData magicSpellData = (button as MagicSpellButton).magicSpellData;
 
-			m_heroMagicPanels[m_currentHero].gameObject.SetActive(false);
+			if (m_playerPartyList[m_currentHero].currentMP >= magicSpellData.mpCost)
+			{
+				Debug.Log("Select Target! m_currentHero " + m_currentHero);
+				m_currentTargetState = TargetState.Magic_Target;
+				m_spellBeingTargeted = magicSpellData;
+
+				m_heroMagicPanels[m_currentHero].gameObject.SetActive(false);
+			}
+			else
+			{
+				//TODO: Needs in game UI
+				Debug.LogWarning("Insufficient MP!");
+			}
 		}
 	}
 	#endregion
@@ -587,7 +606,7 @@ public class BattleManager : MonoBehaviour
 					break;
 				case CombatActionType.Magic:
 					{
-						DoSpellEffect(action.sourceParticipant, action.targetParticipant, action.magicSpellData);
+						DetermineSpellEffect(action.sourceParticipant, action.targetParticipant, action.magicSpellData);
 					}
 					break;
 				case CombatActionType.Item:
@@ -604,6 +623,7 @@ public class BattleManager : MonoBehaviour
 			}
 
 			UpdateHitPointText();
+			UpdateMagicPointText();
 
 			if (m_aliveHeros < 1 || m_aliveMonsters < 1) 
 			{
@@ -792,7 +812,7 @@ public class BattleManager : MonoBehaviour
 		}
 	}
 
-	private void DoSpellEffect (BattleParticipant sourceParticipant, BattleParticipant targetParticipant, MagicSpellData magicSpellData)
+	private void DetermineSpellEffect (BattleParticipant sourceParticipant, BattleParticipant targetParticipant, MagicSpellData magicSpellData)
 	{
 		if (magicSpellData.spellEffect == SpellEffect.Heal)
 		{
@@ -817,6 +837,8 @@ public class BattleManager : MonoBehaviour
 		{
 			DoMagicHitRoll (sourceParticipant, targetParticipant, magicSpellData);
 		}
+
+		sourceParticipant.currentMP -= magicSpellData.mpCost;
 	}
 
 	private void UpdateHitPointText()
@@ -824,6 +846,14 @@ public class BattleManager : MonoBehaviour
 		for (int i=0;i<4;++i)
 		{
 			m_txtPCHPs[i].text = m_playerPartyList[i].currentHP.ToString() + "/" + m_playerPartyList[i].maxHP.ToString();
+		}
+	}
+
+	private void UpdateMagicPointText()
+	{
+		for (int i=0;i<4;++i)
+		{
+			m_txtPCMPs[i].text = m_playerPartyList[i].currentMP.ToString() + "/" + m_playerPartyList[i].maxMP.ToString();
 		}
 	}
 	#endregion
