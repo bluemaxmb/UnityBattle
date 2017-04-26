@@ -153,6 +153,8 @@ public class BattleManager : MonoBehaviour
 	{
 		int monsterGroup = UnityEngine.Random.Range(0,2);
 
+		Debug.Log("monsterGroup: " + monsterGroup);
+
 		switch (monsterGroup)
 		{
 			case 0:
@@ -181,7 +183,7 @@ public class BattleManager : MonoBehaviour
 	//TODO: This is god awful We have three functions doing so much of the same shit and there is a better way to do this.
 	private void InitializeMonsterGroupZero()
 	{
-		int numMonsters = UnityEngine.Random.Range(0,9);
+		int numMonsters = UnityEngine.Random.Range(1,9);
 
 		for (int i=0;i<numMonsters;++i)
 		{
@@ -199,16 +201,11 @@ public class BattleManager : MonoBehaviour
 
 			m_aliveMonsters++;
 		}
-
-		if (m_aliveHeros < 1)
-		{
-			InitializeMonsterGroupZero();
-		}
 	}
 
 	private void InitializeMonsterGroupOne()
 	{
-		int numMonsters = UnityEngine.Random.Range(0,4);
+		int numMonsters = UnityEngine.Random.Range(1,4);
 
 		for (int i=0;i<numMonsters;++i)
 		{
@@ -227,7 +224,7 @@ public class BattleManager : MonoBehaviour
 			m_aliveMonsters++;
 		}
 
-		if (m_aliveHeros < 1)
+		if (m_aliveMonsters < 1)
 		{
 			InitializeMonsterGroupOne();
 		}
@@ -235,8 +232,8 @@ public class BattleManager : MonoBehaviour
 
 	private void InitializeMonsterGroupTwo()
 	{
-		int numLargeMonsters = UnityEngine.Random.Range(0,3);
-		int numSmallMonsters = UnityEngine.Random.Range(0,5);
+		int numLargeMonsters = UnityEngine.Random.Range(1,3);
+		int numSmallMonsters = UnityEngine.Random.Range(1,5);
 
 		for (int i=0;i<numLargeMonsters;++i)
 		{
@@ -272,7 +269,7 @@ public class BattleManager : MonoBehaviour
 			m_aliveMonsters++;
 		}
 
-		if (m_aliveHeros < 1)
+		if (m_aliveMonsters < 1)
 		{
 			InitializeMonsterGroupTwo();
 		}
@@ -348,7 +345,37 @@ public class BattleManager : MonoBehaviour
 		{
 			if (m_currentTargetState != TargetState.None)
 			{
-				m_currentTargetState = TargetState.None;
+				switch (m_currentTargetState)
+				{
+				case TargetState.Fight:
+					{
+						m_currentTargetState = TargetState.None;
+					}
+					break;
+				case TargetState.Magic_Select:
+					{
+						m_currentTargetState = TargetState.None;
+						m_heroMagicPanels[m_currentHero].gameObject.SetActive(false);
+					}
+					break;
+				case TargetState.Magic_Target:
+					{
+						m_currentTargetState = TargetState.Magic_Select;
+						m_heroMagicPanels[m_currentHero].gameObject.SetActive(true);
+						m_spellBeingTargeted = null;
+					}
+					break;
+				case TargetState.Item_Select:
+					{
+						m_currentTargetState = TargetState.None;
+					}
+					break;
+				case TargetState.Item_Target:
+					{
+						m_currentTargetState = TargetState.Item_Select;
+					}
+					break;
+				}
 			}
 			else
 			{
@@ -778,6 +805,8 @@ public class BattleManager : MonoBehaviour
 				{
 					targetParticipant.currentHP = targetParticipant.maxHP;
 				}
+
+				Debug.Log(sourceParticipant.participantName + " heals " + targetParticipant.participantName + " for " + healAmount);
 			} 
 			else 
 			{
