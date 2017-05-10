@@ -85,7 +85,7 @@ public class BattleManager : MonoBehaviour
 		InitializePlayerParty();
 		InitializeMonsterParty();
 
-		Debug.Log("Battle Start");
+		SuperLogger.Log("Battle Start");
 	}
 
 	private void OnDestroy()
@@ -153,7 +153,7 @@ public class BattleManager : MonoBehaviour
 	{
 		int monsterGroup = UnityEngine.Random.Range(0,2);
 
-		Debug.Log("monsterGroup: " + monsterGroup);
+		SuperLogger.Log("monsterGroup: " + monsterGroup);
 
 		switch (monsterGroup)
 		{
@@ -174,7 +174,7 @@ public class BattleManager : MonoBehaviour
 			break;
 			default:
 			{
-				Debug.Log("Unexpected result: " + monsterGroup);
+				SuperLogger.Log("Unexpected result: " + monsterGroup);
 			}
 			break;
 		}			
@@ -302,29 +302,29 @@ public class BattleManager : MonoBehaviour
 			break;
 		case BattleState.monsterDecision: 
 			{
-				Debug.Log("The Monster is making his mind up!");
+				SuperLogger.Log("The Monster is making his mind up!");
 				MonsterDecision();
 				m_currentBattleState = BattleState.resolveRound;
 			}
 			break;
 		case BattleState.resolveRound: 
 			{
-				Debug.Log("Let's see how it all plays out...");
+				SuperLogger.Log("Let's see how it all plays out...");
 				ResolveRound();
 
 				if (m_aliveHeros < 1)
 				{
-					Debug.Log("You Lose!");
+					SuperLogger.Log("You Lose!");
 					m_currentBattleState = BattleState.endCombat;
 				}
 				else if (m_aliveMonsters < 1)
 				{
-					Debug.Log("You Win!");
+					SuperLogger.Log("You Win!");
 					m_currentBattleState = BattleState.endCombat;
 				}
 				else
 				{
-					Debug.Log("Another round");
+					SuperLogger.Log("Another round");
 					m_currentHero = 0;
 					m_currentBattleState = BattleState.playerInput;
 				}
@@ -332,7 +332,7 @@ public class BattleManager : MonoBehaviour
 			break;
 		case BattleState.endCombat: 
 			{
-				//Debug.Log("Victory\n");
+				//SuperLogger.Log("Victory\n");
 			}
 			break;
 		}	
@@ -393,7 +393,7 @@ public class BattleManager : MonoBehaviour
 	{
 		if (m_currentBattleState == BattleState.playerInput)
 		{
-			Debug.Log("Select Target! m_currentHero " + m_currentHero);
+			SuperLogger.Log("Select Target! m_currentHero " + m_currentHero);
 			m_currentTargetState = TargetState.Fight;
 
 			if (!m_btnUndo.gameObject.activeSelf)
@@ -407,7 +407,7 @@ public class BattleManager : MonoBehaviour
 	{
 		if (m_currentBattleState == BattleState.playerInput)
 		{
-			Debug.Log("Select Spell! m_currentHero " + m_currentHero);
+			SuperLogger.Log("Select Spell! m_currentHero " + m_currentHero);
 
 			if (m_playerPartyList[m_currentHero].battleData.spellIndexArray.Length > 0)
 			{
@@ -426,7 +426,7 @@ public class BattleManager : MonoBehaviour
 			else
 			{
 				//TODO: Needs in game UI
-				Debug.LogWarning("No spells!");
+				SuperLogger.LogWarning("No spells!");
 			}
 		}
 	}
@@ -443,7 +443,7 @@ public class BattleManager : MonoBehaviour
 
 	private void OnTargetClicked(Button button)
 	{
-		Debug.Log("button " + button + " target state" + m_currentTargetState + " battle state " + m_currentBattleState);
+		SuperLogger.Log("button " + button + " target state" + m_currentTargetState + " battle state " + m_currentBattleState);
 
 		switch (m_currentTargetState)	
 		{
@@ -470,7 +470,7 @@ public class BattleManager : MonoBehaviour
 				m_combatActionQueue.Enqueue(action);
 				m_currentHero++;
 
-				Debug.Log(action.sourceParticipant.participantName + " is targeting  " + action.targetParticipant.participantName);
+				SuperLogger.Log(action.sourceParticipant.participantName + " is targeting  " + action.targetParticipant.participantName);
 			}
 			break;
 		case TargetState.Magic_Target:
@@ -500,7 +500,7 @@ public class BattleManager : MonoBehaviour
 				m_currentHero++;
 				m_spellBeingTargeted = null;
 
-				Debug.Log(action.sourceParticipant.participantName + " is targeting  " + action.targetParticipant.participantName + " with spell " + action.magicSpellData.spellName);
+				SuperLogger.Log(action.sourceParticipant.participantName + " is targeting  " + action.targetParticipant.participantName + " with spell " + action.magicSpellData.spellName);
 			}
 			break;
 		case TargetState.Item_Target:
@@ -527,7 +527,7 @@ public class BattleManager : MonoBehaviour
 
 			if (m_playerPartyList[m_currentHero].currentMP >= magicSpellData.mpCost)
 			{
-				Debug.Log("Select Target! m_currentHero " + m_currentHero);
+				SuperLogger.Log("Select Target! m_currentHero " + m_currentHero);
 				m_currentTargetState = TargetState.Magic_Target;
 				m_spellBeingTargeted = magicSpellData;
 
@@ -536,7 +536,7 @@ public class BattleManager : MonoBehaviour
 			else
 			{
 				//TODO: Needs in game UI
-				Debug.LogWarning("Insufficient MP!");
+				SuperLogger.LogWarning("Insufficient MP!");
 			}
 		}
 	}
@@ -580,7 +580,7 @@ public class BattleManager : MonoBehaviour
 					foundTarget = true;
 					action.actionType = CombatActionType.Fight;
 
-					Debug.Log(action.sourceParticipant.participantName + " is targeting  " + action.targetParticipant.participantName);
+					SuperLogger.Log(action.sourceParticipant.participantName + " is targeting  " + action.targetParticipant.participantName);
 
 					m_combatActionQueue.Enqueue (action);
 				}
@@ -636,7 +636,7 @@ public class BattleManager : MonoBehaviour
 	{
 		if (targetParticipant.currentHP < 0)
 		{
-			Debug.Log (sourceParticipant.participantName + " is ineffective!");
+			SuperLogger.Log (sourceParticipant.participantName + " is ineffective!");
 		}
 		else
 		{
@@ -650,7 +650,7 @@ public class BattleManager : MonoBehaviour
 			if (hitRoll == 200)
 			{
 				//Miss
-				Debug.Log (sourceParticipant.participantName + " misses " + targetParticipant.participantName);
+				SuperLogger.Log (sourceParticipant.participantName + " misses " + targetParticipant.participantName);
 			} 
 			else if (hitRoll == 0) 
 			{
@@ -665,7 +665,7 @@ public class BattleManager : MonoBehaviour
 			else 
 			{
 				//Also miss
-				Debug.Log (sourceParticipant.participantName + " misses " + targetParticipant.participantName);
+				SuperLogger.Log (sourceParticipant.participantName + " misses " + targetParticipant.participantName);
 			} 
 		}
 	}
@@ -688,20 +688,20 @@ public class BattleManager : MonoBehaviour
 
 			if (damageThisHit < 0)
 			{
-				Debug.Log("Absorbed!");
+				SuperLogger.Log("Absorbed!");
 				damageThisHit = 0;
 			}
 
 			totalDamage += damageThisHit;
 		}
 
-		Debug.Log (sourceParticipant.participantName + " hits " + targetParticipant.participantName + " " + sourceParticipant.Hits () + " times for " + totalDamage + " damage.");
+		SuperLogger.Log (sourceParticipant.participantName + " hits " + targetParticipant.participantName + " " + sourceParticipant.Hits () + " times for " + totalDamage + " damage.");
 
 		targetParticipant.currentHP -= totalDamage;
 
 		if (targetParticipant.currentHP <= 0)
 		{
-			Debug.Log(targetParticipant.participantName + " has died!");
+			SuperLogger.Log(targetParticipant.participantName + " has died!");
 			targetParticipant.currentHP = 0;
 			if (targetParticipant is PlayableBattleParticipant) 
 			{
@@ -719,7 +719,7 @@ public class BattleManager : MonoBehaviour
 	{
 		if (targetParticipant.currentHP < 0)
 		{
-			Debug.Log (sourceParticipant.participantName + " is ineffective!");
+			SuperLogger.Log (sourceParticipant.participantName + " is ineffective!");
 		}
 		else
 		{
@@ -741,7 +741,7 @@ public class BattleManager : MonoBehaviour
 			if (hitRoll == 200)
 			{
 				//Resisted
-				Debug.Log (targetParticipant.participantName + " resisted " + sourceParticipant.participantName + "'s spell");
+				SuperLogger.Log (targetParticipant.participantName + " resisted " + sourceParticipant.participantName + "'s spell");
 				DoMagicEffect(sourceParticipant, targetParticipant, magicSpellData, true);
 			} 
 			else if (hitRoll == 0) 
@@ -757,7 +757,7 @@ public class BattleManager : MonoBehaviour
 			else 
 			{
 				//Also resisted
-				Debug.Log (targetParticipant.participantName + " resisted " + sourceParticipant.participantName + "'s spell");
+				SuperLogger.Log (targetParticipant.participantName + " resisted " + sourceParticipant.participantName + "'s spell");
 				DoMagicEffect(sourceParticipant, targetParticipant, magicSpellData, true);
 			} 
 		}
@@ -783,13 +783,13 @@ public class BattleManager : MonoBehaviour
 					spellDamage = 2 * (UnityEngine.Random.Range (magicSpellData.effectiveness, 2 * magicSpellData.effectiveness));
 				}
 
-				Debug.Log (sourceParticipant.participantName + " casts " +  magicSpellData.spellName + " on " + targetParticipant.participantName + " for " + spellDamage + " damage.");
+				SuperLogger.Log (sourceParticipant.participantName + " casts " +  magicSpellData.spellName + " on " + targetParticipant.participantName + " for " + spellDamage + " damage.");
 
 				targetParticipant.currentHP -= spellDamage;
 
 				if (targetParticipant.currentHP <= 0)
 				{
-					Debug.Log(targetParticipant.participantName + " has died!");
+					SuperLogger.Log(targetParticipant.participantName + " has died!");
 					targetParticipant.currentHP = 0;
 					if (targetParticipant is PlayableBattleParticipant) 
 					{
@@ -806,7 +806,7 @@ public class BattleManager : MonoBehaviour
 		case SpellEffect.Heal:
 		default:
 			{
-				Debug.Log ("Should never happen.");
+				SuperLogger.Log ("Should never happen.");
 			}
 			break;
 		}
@@ -826,11 +826,11 @@ public class BattleManager : MonoBehaviour
 					targetParticipant.currentHP = targetParticipant.maxHP;
 				}
 
-				Debug.Log(sourceParticipant.participantName + " heals " + targetParticipant.participantName + " for " + healAmount);
+				SuperLogger.Log(sourceParticipant.participantName + " heals " + targetParticipant.participantName + " for " + healAmount);
 			} 
 			else 
 			{
-				Debug.Log (sourceParticipant.participantName + "'s spell is ineffective!");
+				SuperLogger.Log (sourceParticipant.participantName + "'s spell is ineffective!");
 			}
 		}
 		else

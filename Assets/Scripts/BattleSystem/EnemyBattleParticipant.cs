@@ -44,7 +44,7 @@ public class EnemyBattleParticipant : NonPlayableBattleParticipant {
 			break;
 			default:
 			{
-				Debug.LogError("Undefined");
+                   SuperLogger.LogError("Undefined");
 			}
 			break;
 		}
@@ -70,7 +70,7 @@ public class EnemyBattleParticipant : NonPlayableBattleParticipant {
 		int baseAttack = m_battleData.attack;
 		int damageRoll = Random.Range(baseAttack, 2 * baseAttack);
 
-		Debug.Log(m_name + " damage roll: " + damageRoll);
+		SuperLogger.Log(m_name + " damage roll: " + damageRoll);
 
 		return damageRoll;
 	}

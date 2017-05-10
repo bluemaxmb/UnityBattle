@@ -20,7 +20,7 @@ public class PlayableBattleParticipant : BattleParticipant
 		int baseAttack = /*TODO: Add weapon value* + */ m_battleData.strength / 2;
 		int damageRoll = Random.Range(baseAttack, 2 * baseAttack);
 
-		Debug.Log(m_name + " damage roll: " + damageRoll);
+		SuperLogger.Log(m_name + " damage roll: " + damageRoll);
 
 		return damageRoll;
 	}
