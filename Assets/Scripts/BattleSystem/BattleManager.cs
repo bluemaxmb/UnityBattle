@@ -21,9 +21,13 @@ public class BattleManager : MonoBehaviour
 	[SerializeField] Transform[] m_monsterFormation3Placements;
 	[SerializeField] Transform[] m_bossPlacement;
 	[SerializeField] Transform[] m_heroPlacements;
+	[SerializeField] GridLayoutGroup[] m_heroMagicPanels;
 
 	[SerializeField] GameObject[] m_monsterPrefabs;
 	[SerializeField] GameObject[] m_heroPrefabs;
+	[SerializeField] GameObject m_spellButtonPrefab;
+
+	[SerializeField] MagicDatabase m_magicDatabase;
 
 	private enum BattleState 
 	{
@@ -38,8 +42,10 @@ public class BattleManager : MonoBehaviour
 	{
 		None,
 		Fight,
-		Magic,
-		Item
+		Magic_Select,
+		Magic_Target,
+		Item_Select,
+		Item_Target
 	}
 
 	private enum CombatActionType
@@ -55,6 +61,7 @@ public class BattleManager : MonoBehaviour
 		public BattleParticipant sourceParticipant;
 		public BattleParticipant targetParticipant;
 		public CombatActionType actionType;
+		public MagicSpellData magicSpellData;
 	}
 
 	private List<PlayableBattleParticipant> m_playerPartyList = new List<PlayableBattleParticipant>();
@@ -62,6 +69,7 @@ public class BattleManager : MonoBehaviour
 	private Queue<CombatAction> m_combatActionQueue = new Queue<CombatAction>();
 	private BattleState m_currentBattleState = BattleState.startCombat;
 	private TargetState m_currentTargetState = TargetState.None;
+	private MagicSpellData m_spellBeingTargeted;
 	private const int m_baseChanceToHit = 168;
 	private int m_currentHero;
 	private int m_aliveHeros;
@@ -113,6 +121,21 @@ public class BattleManager : MonoBehaviour
 			newParticipant.Init();
 			m_playerPartyList.Add(newParticipant);
 
+			if (newParticipant.battleData.spellIndexArray.Length > 0)
+			{
+				for (int j=0;j< newParticipant.battleData.spellIndexArray.Length;++j)
+				{
+					GameObject spellObject = Instantiate(m_spellButtonPrefab);
+					spellObject.transform.SetParent(m_heroMagicPanels[i].transform, false);
+
+					MagicSpellButton magicSpellButton = spellObject.GetComponentInChildren<MagicSpellButton>();
+					magicSpellButton.onClick.AddListener(() => OnMagicSpellButtonClicked(magicSpellButton));
+					magicSpellButton.SetMagicSpellData(m_magicDatabase.GetMagicSpellData(newParticipant.battleData.spellIndexArray[j]));
+				}							
+			}
+
+			m_heroMagicPanels[i].gameObject.SetActive(false);
+
 			AllyTargetButton targetButton = tempObject.GetComponentInChildren<AllyTargetButton>();
 			targetButton.onClick.AddListener(() => OnTargetClicked(targetButton));
 			targetButton.battleParticipant = newParticipant;
@@ -129,6 +152,8 @@ public class BattleManager : MonoBehaviour
 	private void InitializeMonsterParty()
 	{
 		int monsterGroup = UnityEngine.Random.Range(0,2);
+
+		Debug.Log("monsterGroup: " + monsterGroup);
 
 		switch (monsterGroup)
 		{
@@ -158,7 +183,7 @@ public class BattleManager : MonoBehaviour
 	//TODO: This is god awful We have three functions doing so much of the same shit and there is a better way to do this.
 	private void InitializeMonsterGroupZero()
 	{
-		int numMonsters = UnityEngine.Random.Range(0,9);
+		int numMonsters = UnityEngine.Random.Range(1,9);
 
 		for (int i=0;i<numMonsters;++i)
 		{
@@ -180,7 +205,7 @@ public class BattleManager : MonoBehaviour
 
 	private void InitializeMonsterGroupOne()
 	{
-		int numMonsters = UnityEngine.Random.Range(0,4);
+		int numMonsters = UnityEngine.Random.Range(1,4);
 
 		for (int i=0;i<numMonsters;++i)
 		{
@@ -198,12 +223,17 @@ public class BattleManager : MonoBehaviour
 
 			m_aliveMonsters++;
 		}
+
+		if (m_aliveMonsters < 1)
+		{
+			InitializeMonsterGroupOne();
+		}
 	}
 
 	private void InitializeMonsterGroupTwo()
 	{
-		int numLargeMonsters = UnityEngine.Random.Range(0,3);
-		int numSmallMonsters = UnityEngine.Random.Range(0,5);
+		int numLargeMonsters = UnityEngine.Random.Range(1,3);
+		int numSmallMonsters = UnityEngine.Random.Range(1,5);
 
 		for (int i=0;i<numLargeMonsters;++i)
 		{
@@ -237,6 +267,11 @@ public class BattleManager : MonoBehaviour
 			tempObject.transform.SetParent(m_monsterFormation3Placements[i+2], false);
 
 			m_aliveMonsters++;
+		}
+
+		if (m_aliveMonsters < 1)
+		{
+			InitializeMonsterGroupTwo();
 		}
 	}
 
@@ -310,7 +345,37 @@ public class BattleManager : MonoBehaviour
 		{
 			if (m_currentTargetState != TargetState.None)
 			{
-				m_currentTargetState = TargetState.None;
+				switch (m_currentTargetState)
+				{
+				case TargetState.Fight:
+					{
+						m_currentTargetState = TargetState.None;
+					}
+					break;
+				case TargetState.Magic_Select:
+					{
+						m_currentTargetState = TargetState.None;
+						m_heroMagicPanels[m_currentHero].gameObject.SetActive(false);
+					}
+					break;
+				case TargetState.Magic_Target:
+					{
+						m_currentTargetState = TargetState.Magic_Select;
+						m_heroMagicPanels[m_currentHero].gameObject.SetActive(true);
+						m_spellBeingTargeted = null;
+					}
+					break;
+				case TargetState.Item_Select:
+					{
+						m_currentTargetState = TargetState.None;
+					}
+					break;
+				case TargetState.Item_Target:
+					{
+						m_currentTargetState = TargetState.Item_Select;
+					}
+					break;
+				}
 			}
 			else
 			{
@@ -318,6 +383,7 @@ public class BattleManager : MonoBehaviour
 				{
 					m_combatActionQueue.Dequeue();
 					m_currentHero--;
+					m_spellBeingTargeted = null;
 				}
 			}
 		}	
@@ -339,7 +405,30 @@ public class BattleManager : MonoBehaviour
 
 	private void OnMagicButtonClicked()
 	{
+		if (m_currentBattleState == BattleState.playerInput)
+		{
+			Debug.Log("Select Spell! m_currentHero " + m_currentHero);
 
+			if (m_playerPartyList[m_currentHero].battleData.spellIndexArray.Length > 0)
+			{
+				m_currentTargetState = TargetState.Magic_Select;
+
+				if  (!m_heroMagicPanels[m_currentHero].gameObject.activeSelf)
+				{
+					m_heroMagicPanels[m_currentHero].gameObject.SetActive(true);
+				}
+
+				if (!m_btnUndo.gameObject.activeSelf)
+				{
+					m_btnUndo.gameObject.SetActive(true);
+				}
+			}
+			else
+			{
+				//TODO: Needs in game UI
+				Debug.LogWarning("No spells!");
+			}
+		}
 	}
 
 	private void OnRunButtonClicked()
@@ -354,6 +443,7 @@ public class BattleManager : MonoBehaviour
 
 	private void OnTargetClicked(Button button)
 	{
+		Debug.Log("button " + button + " target state" + m_currentTargetState + " battle state " + m_currentBattleState);
 
 		switch (m_currentTargetState)	
 		{
@@ -374,6 +464,7 @@ public class BattleManager : MonoBehaviour
 				{
 					action.targetParticipant = null;
 				}
+
 				action.actionType = CombatActionType.Fight;
 
 				m_combatActionQueue.Enqueue(action);
@@ -382,12 +473,37 @@ public class BattleManager : MonoBehaviour
 				Debug.Log(action.sourceParticipant.participantName + " is targeting  " + action.targetParticipant.participantName);
 			}
 			break;
-			case TargetState.Magic:
+		case TargetState.Magic_Target:
 			{
+				CombatAction action = new CombatAction();
+				action.sourceParticipant = m_playerPartyList[m_currentHero];
 
+				//TODO: Pull spell targeting type here from m_spellBeingTargeted
+
+				if (button is EnemyTargetButton)
+				{
+					action.targetParticipant = (button as EnemyTargetButton).battleParticipant;
+				}
+				else if (button is AllyTargetButton)
+				{
+					action.targetParticipant = (button as AllyTargetButton).battleParticipant;
+				}
+				else
+				{
+					action.targetParticipant = null;
+				}
+
+				action.magicSpellData = m_spellBeingTargeted;
+				action.actionType = CombatActionType.Magic;
+
+				m_combatActionQueue.Enqueue(action);
+				m_currentHero++;
+				m_spellBeingTargeted = null;
+
+				Debug.Log(action.sourceParticipant.participantName + " is targeting  " + action.targetParticipant.participantName + " with spell " + action.magicSpellData.spellName);
 			}
 			break;
-			case TargetState.Item:
+		case TargetState.Item_Target:
 			{
 
 			}
@@ -401,6 +517,28 @@ public class BattleManager : MonoBehaviour
 		}
 
 		m_currentTargetState = TargetState.None;
+	}
+
+	private void OnMagicSpellButtonClicked(Button button)
+	{
+		if (m_currentTargetState == TargetState.Magic_Select)
+		{
+			MagicSpellData magicSpellData = (button as MagicSpellButton).magicSpellData;
+
+			if (m_playerPartyList[m_currentHero].currentMP >= magicSpellData.mpCost)
+			{
+				Debug.Log("Select Target! m_currentHero " + m_currentHero);
+				m_currentTargetState = TargetState.Magic_Target;
+				m_spellBeingTargeted = magicSpellData;
+
+				m_heroMagicPanels[m_currentHero].gameObject.SetActive(false);
+			}
+			else
+			{
+				//TODO: Needs in game UI
+				Debug.LogWarning("Insufficient MP!");
+			}
+		}
 	}
 	#endregion
 
@@ -463,45 +601,12 @@ public class BattleManager : MonoBehaviour
 				{
 				case CombatActionType.Fight:
 					{						
-						if (action.targetParticipant.currentHP < 0)
-						{
-							Debug.Log (action.sourceParticipant.participantName + " is ineffective!");
-						}
-						else
-						{
-							int chanceToHit = (m_baseChanceToHit + action.sourceParticipant.Accuracy ()) - action.targetParticipant.Evasion ();
-							int hitRoll = UnityEngine.Random.Range (0, 200);
-
-							/*
-								If that
-								number is less than or equal to the Chance to Hit, the Hit connects. 0 is an
-								automatic hit, and 200 is an automatic miss. */
-							if (hitRoll == 200)
-							{
-								//Miss
-								Debug.Log (action.sourceParticipant.participantName + " misses " + action.targetParticipant.participantName);
-							} 
-							else if (hitRoll == 0) 
-							{
-								//Auto Critical
-								DoDamage (action.sourceParticipant, action.targetParticipant, true);
-
-							} 
-							else if (hitRoll <= chanceToHit) 
-							{
-								DoDamage (action.sourceParticipant, action.targetParticipant, hitRoll <= action.sourceParticipant.CritChance ());
-							}
-							else 
-							{
-								//Also miss
-								Debug.Log (action.sourceParticipant.participantName + " misses " + action.targetParticipant.participantName);
-							} 
-						}
+						DoMeleeHitRoll(action.sourceParticipant, action.targetParticipant);
 					}
 					break;
 				case CombatActionType.Magic:
 					{
-
+						DetermineSpellEffect(action.sourceParticipant, action.targetParticipant, action.magicSpellData);
 					}
 					break;
 				case CombatActionType.Item:
@@ -518,6 +623,7 @@ public class BattleManager : MonoBehaviour
 			}
 
 			UpdateHitPointText();
+			UpdateMagicPointText();
 
 			if (m_aliveHeros < 1 || m_aliveMonsters < 1) 
 			{
@@ -526,7 +632,45 @@ public class BattleManager : MonoBehaviour
 		}
 	}
 
-	private void DoDamage(BattleParticipant sourceParticipant, BattleParticipant targetParticipant, bool isCritical)
+	private void DoMeleeHitRoll(BattleParticipant sourceParticipant, BattleParticipant targetParticipant)
+	{
+		if (targetParticipant.currentHP < 0)
+		{
+			Debug.Log (sourceParticipant.participantName + " is ineffective!");
+		}
+		else
+		{
+			int chanceToHit = (m_baseChanceToHit + sourceParticipant.Accuracy ()) - targetParticipant.Evasion ();
+			int hitRoll = UnityEngine.Random.Range (0, 200);
+
+			/*
+								If that
+								number is less than or equal to the Chance to Hit, the Hit connects. 0 is an
+								automatic hit, and 200 is an automatic miss. */
+			if (hitRoll == 200)
+			{
+				//Miss
+				Debug.Log (sourceParticipant.participantName + " misses " + targetParticipant.participantName);
+			} 
+			else if (hitRoll == 0) 
+			{
+				//Auto Critical
+				DoMeleeDamage (sourceParticipant, targetParticipant, true);
+
+			} 
+			else if (hitRoll <= chanceToHit) 
+			{
+				DoMeleeDamage (sourceParticipant, targetParticipant, hitRoll <= sourceParticipant.CritChance ());
+			}
+			else 
+			{
+				//Also miss
+				Debug.Log (sourceParticipant.participantName + " misses " + targetParticipant.participantName);
+			} 
+		}
+	}
+
+	private void DoMeleeDamage(BattleParticipant sourceParticipant, BattleParticipant targetParticipant, bool isCritical)
 	{
 		int totalDamage = 0;
 
@@ -571,11 +715,145 @@ public class BattleManager : MonoBehaviour
 		}
 	}
 
+	private void DoMagicHitRoll(BattleParticipant sourceParticipant, BattleParticipant targetParticipant, MagicSpellData magicSpellData)
+	{
+		if (targetParticipant.currentHP < 0)
+		{
+			Debug.Log (sourceParticipant.participantName + " is ineffective!");
+		}
+		else
+		{
+			/* TODO:
+			 	1) Base Chance to Hit = 148
+				--If the target is Resistant to the spell's element, set BC to 0
+				--If the target is Weak to the spell's element, add +40 to BC
+
+				NOTE: If a target is both Resistant and Weak, the base chance is set to 0, but
+				40 is still added, resulting in BC = 40.
+			*/
+			int chanceToHit = (m_baseChanceToHit + magicSpellData.accuracy) - targetParticipant.MagicDefense();
+			int hitRoll = UnityEngine.Random.Range (0, 200);
+
+			/*
+								If that
+								number is less than or equal to the Chance to Hit, the Hit connects. 0 is an
+								automatic hit, and 200 is an automatic miss. */
+			if (hitRoll == 200)
+			{
+				//Resisted
+				Debug.Log (targetParticipant.participantName + " resisted " + sourceParticipant.participantName + "'s spell");
+				DoMagicEffect(sourceParticipant, targetParticipant, magicSpellData, true);
+			} 
+			else if (hitRoll == 0) 
+			{
+				//Auto Unresisted
+				DoMagicEffect(sourceParticipant, targetParticipant, magicSpellData, false);
+
+			} 
+			else if (hitRoll <= chanceToHit) 
+			{
+				DoMagicEffect(sourceParticipant, targetParticipant, magicSpellData, false);
+			}
+			else 
+			{
+				//Also resisted
+				Debug.Log (targetParticipant.participantName + " resisted " + sourceParticipant.participantName + "'s spell");
+				DoMagicEffect(sourceParticipant, targetParticipant, magicSpellData, true);
+			} 
+		}
+	}
+
+	private void DoMagicEffect (BattleParticipant sourceParticipant, BattleParticipant targetParticipant, MagicSpellData magicSpellData, bool wasResisted)
+	{
+		switch (magicSpellData.spellEffect) 
+		{
+		case SpellEffect.Damage:
+			{
+				// TODO:
+				// --If target is resistant to spell element, divide effectivity by 2
+				// --If the target is weak to spell element, multiply effectivity by 1.5
+
+				int spellDamage = 0;
+				if (wasResisted)
+				{
+					spellDamage = UnityEngine.Random.Range (magicSpellData.effectiveness, 2 * magicSpellData.effectiveness);
+				}
+				else
+				{
+					spellDamage = 2 * (UnityEngine.Random.Range (magicSpellData.effectiveness, 2 * magicSpellData.effectiveness));
+				}
+
+				Debug.Log (sourceParticipant.participantName + " casts " +  magicSpellData.spellName + " on " + targetParticipant.participantName + " for " + spellDamage + " damage.");
+
+				targetParticipant.currentHP -= spellDamage;
+
+				if (targetParticipant.currentHP <= 0)
+				{
+					Debug.Log(targetParticipant.participantName + " has died!");
+					targetParticipant.currentHP = 0;
+					if (targetParticipant is PlayableBattleParticipant) 
+					{
+						m_aliveHeros--;
+					} 
+					else if (targetParticipant is EnemyBattleParticipant) 
+					{
+						m_aliveMonsters--;
+						targetParticipant.gameObject.SetActive(false);
+					}
+				}
+			}
+			break;
+		case SpellEffect.Heal:
+		default:
+			{
+				Debug.Log ("Should never happen.");
+			}
+			break;
+		}
+	}
+
+	private void DetermineSpellEffect (BattleParticipant sourceParticipant, BattleParticipant targetParticipant, MagicSpellData magicSpellData)
+	{
+		if (magicSpellData.spellEffect == SpellEffect.Heal)
+		{
+			if (targetParticipant.currentHP > 0) 
+			{
+				int healAmount = UnityEngine.Random.Range (magicSpellData.effectiveness, 2 * magicSpellData.effectiveness);
+				targetParticipant.currentHP += healAmount;
+
+				if (targetParticipant.currentHP > targetParticipant.maxHP) 
+				{
+					targetParticipant.currentHP = targetParticipant.maxHP;
+				}
+
+				Debug.Log(sourceParticipant.participantName + " heals " + targetParticipant.participantName + " for " + healAmount);
+			} 
+			else 
+			{
+				Debug.Log (sourceParticipant.participantName + "'s spell is ineffective!");
+			}
+		}
+		else
+		{
+			DoMagicHitRoll (sourceParticipant, targetParticipant, magicSpellData);
+		}
+
+		sourceParticipant.currentMP -= magicSpellData.mpCost;
+	}
+
 	private void UpdateHitPointText()
 	{
 		for (int i=0;i<4;++i)
 		{
 			m_txtPCHPs[i].text = m_playerPartyList[i].currentHP.ToString() + "/" + m_playerPartyList[i].maxHP.ToString();
+		}
+	}
+
+	private void UpdateMagicPointText()
+	{
+		for (int i=0;i<4;++i)
+		{
+			m_txtPCMPs[i].text = m_playerPartyList[i].currentMP.ToString() + "/" + m_playerPartyList[i].maxMP.ToString();
 		}
 	}
 	#endregion
