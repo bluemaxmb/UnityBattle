@@ -11,11 +11,23 @@ Mostly complete melee combat system
   * No real turn order
   
 Things to do:
-  * Turn order
-  * Magic system
-  * Item system
-  * Status effects
-  * Equipment
-  * Further monster group stuff
+* Elemental Resistances
+* Status effects
+  * FAST/SLOW
+* Equipment
+* Items
+  * Potions and such
+  * Weapons as items
+* Turn order
+* Random encounter list
+* Ambush/Surprise
+* Running
+  * unrunnable
+* Enemy AI
+  * Running
+  * Spells
+  * Skills
+  * Attacks (mostly done)
+    * Targetting
   * Art
   * Sound
