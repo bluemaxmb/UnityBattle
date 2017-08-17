@@ -20,6 +20,7 @@ Things to do:
   * Weapons as items
 * Turn order
 * Random encounter list
+  * Correct groups/formations
 * Ambush/Surprise
 * Running
   * unrunnable
