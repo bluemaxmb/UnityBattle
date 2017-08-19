@@ -1,23 +1,44 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class PlayableBattleParticipant : BattleParticipant 
 {
-	[SerializeField] AllyBattleParticipantData m_battleData;
+	[SerializeField] private AllyBattleParticipantData m_battleData = null;
+	[SerializeField] private WeaponDatabase m_weaponDatabase = null; //TODO: Should they really have the whole database or just a reference to their equipped weapon?
 
 	public AllyBattleParticipantData battleData { get { return m_battleData; }}
+
+	private int weaponDamage = 0;
+	private int weaponAccuracy = 0;
 
 	public override void Init()
 	{
 		m_name = m_battleData.participantName;
 		m_maxHP = m_currentHP = m_battleData.maxHP;
 		m_maxMP = m_currentMP = m_battleData.maxMP;
+		WeaponData equippedWeapon = m_weaponDatabase.GetWeaponData(m_battleData.equippedWeaponIndex);
+
+		if (equippedWeapon != null)
+		{
+			weaponDamage = equippedWeapon.damage;
+		}
+		else
+		{
+			//TODO: special formula for unarmed?
+		}
+
+		if (equippedWeapon != null)
+		{
+			weaponAccuracy = equippedWeapon.accuracy;
+		}
+		else
+		{
+			//TODO: special formula for unarmed?
+		}
 	}
 
 	public override int AttackDamage ()
-	{
-		int baseAttack = /*TODO: Add weapon value* + */ m_battleData.strength / 2;
+	{	
+		int baseAttack = weaponDamage + m_battleData.strength / 2;
 		int damageRoll = Random.Range(baseAttack, 2 * baseAttack);
 
 		SuperLogger.Log(m_name + " damage roll: " + damageRoll);
@@ -32,7 +53,7 @@ public class PlayableBattleParticipant : BattleParticipant
 
 	public override int Accuracy ()
 	{
-		return /*Weapon accuracy + */ m_battleData.accuracy;
+		return weaponAccuracy + m_battleData.accuracy;
 	}
 
 	public override int CritChance ()

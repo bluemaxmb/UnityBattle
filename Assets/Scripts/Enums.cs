@@ -1,8 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-
-//TODO: Convert these to bitmasks
+﻿//TODO: Convert these to bitmasks
 public enum MagicType
 {
 	Black,
@@ -12,7 +8,10 @@ public enum MagicType
 public enum Element
 {
 	None,
-	Fire
+	Fire,
+	Ice,
+	Lightning,
+	Earth
 }
 
 public enum Classes
@@ -29,6 +28,17 @@ public enum SpellEffect
 	Damage,
 }
 
+public enum SpecialEffect
+{
+	None,
+	Dragons,
+	Giants,
+	Undead,
+	Were,
+	Water,
+	Magic
+}
+
 public enum TargetType
 {
 	SingleEnemy,
@@ -36,4 +46,16 @@ public enum TargetType
 	AllEnemies,
 	AllAllies,
 	Caster
+}
+
+public enum WeaponType
+{
+	None,
+	Knife,
+	Sword,
+	Axe,
+	Hammer,
+	Staff,
+	Rod,
+	Nunchuck
 }
