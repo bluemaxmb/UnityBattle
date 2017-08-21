@@ -4,28 +4,28 @@ using UnityEngine.UI;
 
 public class BattleManager : MonoBehaviour 
 {
-	[SerializeField] Button m_btnUndo;
-	[SerializeField] Button m_btnFight;
-	[SerializeField] Button m_btnMagic;
-	[SerializeField] Button m_btnRun;
-	[SerializeField] Button m_btnItem;
+	[SerializeField] Button m_btnUndo = null;
+	[SerializeField] Button m_btnFight = null;
+	[SerializeField] Button m_btnMagic = null;
+	[SerializeField] Button m_btnRun = null;
+	[SerializeField] Button m_btnItem = null;
 
-	[SerializeField] Text[] m_txtPCNames;
-	[SerializeField] Text[] m_txtPCHPs;
-	[SerializeField] Text[] m_txtPCMPs;
+	[SerializeField] Text[] m_txtPCNames = null;
+	[SerializeField] Text[] m_txtPCHPs = null;
+	[SerializeField] Text[] m_txtPCMPs = null;
 
-	[SerializeField] Transform[] m_monsterFormation1Placements;
-	[SerializeField] Transform[] m_monsterFormation2Placements;
-	[SerializeField] Transform[] m_monsterFormation3Placements;
-	[SerializeField] Transform[] m_bossPlacement;
-	[SerializeField] Transform[] m_heroPlacements;
-	[SerializeField] GridLayoutGroup[] m_heroMagicPanels;
+	[SerializeField] Transform[] m_monsterFormation1Placements = null;
+	[SerializeField] Transform[] m_monsterFormation2Placements = null;
+	[SerializeField] Transform[] m_monsterFormation3Placements = null;
+	[SerializeField] Transform[] m_bossPlacement = null;
+	[SerializeField] Transform[] m_heroPlacements = null;
+	[SerializeField] GridLayoutGroup[] m_heroMagicPanels = null;
 
-	[SerializeField] GameObject[] m_monsterPrefabs;
-	[SerializeField] GameObject[] m_heroPrefabs;
-	[SerializeField] GameObject m_spellButtonPrefab;
+	[SerializeField] GameObject[] m_monsterPrefabs = null;
+	[SerializeField] GameObject[] m_heroPrefabs = null;
+	[SerializeField] GameObject m_spellButtonPrefab = null;
 
-	[SerializeField] MagicDatabase m_magicDatabase;
+	[SerializeField] MagicDatabase m_magicDatabase = null;
 
 	private enum BattleState 
 	{
@@ -330,7 +330,7 @@ public class BattleManager : MonoBehaviour
 			break;
 		case BattleState.endCombat: 
 			{
-				//SuperLogger.Log("Victory\n");
+				SuperLogger.Log("Battle Over\n");
 			}
 			break;
 		}	
@@ -553,7 +553,7 @@ public class BattleManager : MonoBehaviour
 			while (!foundTarget)
 			{							
 				int index = -1;
-				int choiceRoll = UnityEngine.Random.Range (0, 100);
+				int choiceRoll = Random.Range (0, 100);
 
 				if (choiceRoll >= 50)
 				{
@@ -639,7 +639,7 @@ public class BattleManager : MonoBehaviour
 		else
 		{
 			int chanceToHit = (m_baseChanceToHit + sourceParticipant.Accuracy ()) - targetParticipant.Evasion ();
-			int hitRoll = UnityEngine.Random.Range (0, 200);
+			int hitRoll = Random.Range (0, 200);
 
 			/*
 								If that
@@ -682,7 +682,6 @@ public class BattleManager : MonoBehaviour
 			{
 				damageThisHit += attackDamage;
 			}
-
 
 			if (damageThisHit < 0)
 			{
@@ -730,7 +729,7 @@ public class BattleManager : MonoBehaviour
 				40 is still added, resulting in BC = 40.
 			*/
 			int chanceToHit = (m_baseChanceToHit + magicSpellData.accuracy) - targetParticipant.MagicDefense();
-			int hitRoll = UnityEngine.Random.Range (0, 200);
+			int hitRoll = Random.Range (0, 200);
 
 			/*
 								If that
@@ -774,11 +773,11 @@ public class BattleManager : MonoBehaviour
 				int spellDamage = 0;
 				if (wasResisted)
 				{
-					spellDamage = UnityEngine.Random.Range (magicSpellData.effectiveness, 2 * magicSpellData.effectiveness);
+					spellDamage = Random.Range (magicSpellData.effectiveness, 2 * magicSpellData.effectiveness);
 				}
 				else
 				{
-					spellDamage = 2 * (UnityEngine.Random.Range (magicSpellData.effectiveness, 2 * magicSpellData.effectiveness));
+					spellDamage = 2 * (Random.Range (magicSpellData.effectiveness, 2 * magicSpellData.effectiveness));
 				}
 
 				SuperLogger.Log (sourceParticipant.participantName + " casts " +  magicSpellData.spellName + " on " + targetParticipant.participantName + " for " + spellDamage + " damage.");
@@ -816,7 +815,7 @@ public class BattleManager : MonoBehaviour
 		{
 			if (targetParticipant.currentHP > 0) 
 			{
-				int healAmount = UnityEngine.Random.Range (magicSpellData.effectiveness, 2 * magicSpellData.effectiveness);
+				int healAmount = Random.Range (magicSpellData.effectiveness, 2 * magicSpellData.effectiveness);
 				targetParticipant.currentHP += healAmount;
 
 				if (targetParticipant.currentHP > targetParticipant.maxHP) 
