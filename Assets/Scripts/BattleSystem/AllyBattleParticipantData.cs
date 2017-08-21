@@ -1,8 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-
-public class AllyBattleParticipantData : BattleParticipantData 
+﻿public class AllyBattleParticipantData : BattleParticipantData 
 {
 	public byte strength;
 	public byte agility;

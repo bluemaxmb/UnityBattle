@@ -59,3 +59,12 @@ public enum WeaponType
 	Rod,
 	Nunchuck
 }
+
+public enum ArmorType
+{
+	None,
+	Head,
+	Body,
+	Shield,
+	Arms,
+}
