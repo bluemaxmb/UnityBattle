@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 
 public class EnemyBattleParticipant : NonPlayableBattleParticipant {
@@ -12,11 +10,11 @@ public class EnemyBattleParticipant : NonPlayableBattleParticipant {
 		Boss
 	}
 
-	[SerializeField] private EnemySizeClass m_enemySize;
-	[SerializeField] private EnemyBattleParticipantData[] m_smallEnemyBattleData;
-	[SerializeField] private EnemyBattleParticipantData[] m_largeEnemyBattleData;
-	[SerializeField] private EnemyBattleParticipantData[] m_bossEnemyBattleData;
-	[SerializeField] private Image m_battleImage;
+	[SerializeField] private EnemySizeClass m_enemySize = EnemySizeClass.Small;
+	[SerializeField] private EnemyBattleParticipantData[] m_smallEnemyBattleData = null;
+	[SerializeField] private EnemyBattleParticipantData[] m_largeEnemyBattleData = null;
+	[SerializeField] private EnemyBattleParticipantData[] m_bossEnemyBattleData = null;
+	[SerializeField] private Image m_battleImage = null;
 
 	private EnemyBattleParticipantData m_battleData;
 
@@ -53,7 +51,11 @@ public class EnemyBattleParticipant : NonPlayableBattleParticipant {
 		m_maxHP = m_currentHP = m_battleData.maxHP;
 		m_maxMP = m_currentMP = m_battleData.maxMP;
 		m_battleImage.sprite = m_battleData.battleSprite;
-	}
+
+		m_attackElement = m_battleData.attackElement;
+		m_defenseWeakElement = m_battleData.defenseWeakElement;
+		m_defenseStrongElement = m_battleData.defenseStrongElement;
+}
 
 	public override int AttackDamage ()
 	{

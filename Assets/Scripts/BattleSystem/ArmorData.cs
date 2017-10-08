@@ -2,7 +2,7 @@
 
 public class ArmorData : ScriptableObject
 {
-	public Element elementResist;
+	public ElementTypeMask elementResist;
 	public ArmorType armorType;
 	public string armorName; //TODO: replace with loc id
 	public byte defense;

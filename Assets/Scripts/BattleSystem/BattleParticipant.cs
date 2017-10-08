@@ -1,11 +1,9 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 
 public abstract class BattleParticipant : MonoBehaviour {
 
-	[SerializeField] Button m_targetButton;
+	[SerializeField] Button m_targetButton = null;
 
 	protected string m_name;
 	protected int m_currentHP;
@@ -14,6 +12,10 @@ public abstract class BattleParticipant : MonoBehaviour {
 	protected int m_maxMP;
 	protected int m_hitMultiplier = 1;
 
+	protected StatusEffectMask m_statusEffect;
+	protected ElementTypeMask m_attackElement;
+	protected ElementTypeMask m_defenseWeakElement;
+	protected ElementTypeMask m_defenseStrongElement;
 
 	public string participantName { get { return m_name; } }
 	public int maxHP { get { return m_maxHP; }  }
@@ -21,6 +23,10 @@ public abstract class BattleParticipant : MonoBehaviour {
 	public int maxMP { get { return m_maxMP; } }
 	public int currentMP { get { return m_currentMP; } set { m_currentMP = value;} }
 	public int hitMultiplier { get { return m_hitMultiplier;} set { m_hitMultiplier = value; }}
+	public StatusEffectMask statusEffect { get { return m_statusEffect; } set { m_statusEffect = value; } }
+	public ElementTypeMask attackElement { get { return m_attackElement; } set { m_attackElement = value; } }
+	public ElementTypeMask defenseWeakElement { get { return m_defenseWeakElement; } set { m_defenseWeakElement = value; } }
+	public ElementTypeMask defenseStrongElement { get { return m_defenseStrongElement; } set { m_defenseStrongElement = value; } }
 
 	public abstract void Init();
 	public abstract int AttackDamage();

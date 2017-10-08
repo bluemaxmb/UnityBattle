@@ -27,6 +27,8 @@ public class PlayableBattleParticipant : BattleParticipant
 	{
 		WeaponData equippedWeapon = m_weaponDatabase.GetWeaponData(m_battleData.equippedWeaponIndex);
 
+		m_attackElement = equippedWeapon.element;
+
 		m_weaponDamage = ((equippedWeapon != null) ? equippedWeapon.damage : 0); //should there be a different formula for unarmed?
 		m_weaponAccuracy = ((equippedWeapon != null) ? equippedWeapon.accuracy : 0);
 		m_critChance = ((equippedWeapon != null) ? equippedWeapon.critChance : 0);
@@ -38,6 +40,13 @@ public class PlayableBattleParticipant : BattleParticipant
 		ArmorData equippedShield = m_armorDatabase.GetArmorData(m_battleData.equippedShieldIndex);
 		ArmorData equippedHelmet = m_armorDatabase.GetArmorData(m_battleData.equippedHelmetIndex);
 		ArmorData equippedGloves = m_armorDatabase.GetArmorData(m_battleData.equippedGloveIndex);
+
+		m_defenseStrongElement = ((equippedArmor != null) ? equippedArmor.elementResist : ElementTypeMask.None) &
+			((equippedShield != null) ? equippedShield.elementResist : ElementTypeMask.None) &
+			((equippedHelmet != null) ? equippedHelmet.elementResist : ElementTypeMask.None) &
+			((equippedGloves != null) ? equippedGloves.elementResist : ElementTypeMask.None);
+
+		m_defenseWeakElement = ElementTypeMask.None;
 
 		m_totalDefense = ((equippedArmor != null) ? equippedArmor.defense : 0) +
 			((equippedShield != null) ? equippedShield.defense : 0) +

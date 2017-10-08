@@ -6,7 +6,7 @@ public class MagicSpellData : ScriptableObject
 {
 	public string spellName; //TODO: replace with loc id
 	public MagicType magicType;
-	public Element element;
+	public ElementTypeMask element;
 	public SpellEffect spellEffect;
 	public TargetType targetType;
 	public byte effectiveness;

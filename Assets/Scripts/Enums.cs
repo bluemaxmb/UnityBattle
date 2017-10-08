@@ -5,15 +5,6 @@ public enum MagicType
 	White
 }
 
-public enum Element
-{
-	None,
-	Fire,
-	Ice,
-	Lightning,
-	Earth
-}
-
 public enum Classes
 {
 	Fighter,
