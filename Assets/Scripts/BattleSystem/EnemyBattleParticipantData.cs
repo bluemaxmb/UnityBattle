@@ -1,7 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-using UnityEngine.UI;
+﻿using UnityEngine;
 
 public class EnemyBattleParticipantData : BattleParticipantData 
 {
@@ -16,4 +13,7 @@ public class EnemyBattleParticipantData : BattleParticipantData
 	public byte morale;
 	public int goldValue;
 	public int expValue;
+	public ElementTypeMask attackElement;
+	public ElementTypeMask defenseWeakElement;
+	public ElementTypeMask defenseStrongElement;
 }

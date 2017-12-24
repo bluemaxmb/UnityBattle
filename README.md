@@ -6,15 +6,14 @@ Dynamic "Encounters"
   * There are 3 Encounter formations, the game will pick one at random on startup and initialize a random number of enemies to fill it.
   
 Mostly complete melee combat system
-  * No equipment.
+  * Equipment implemented
+  * Elemental Resistances
   * No status effects
   * No real turn order
   
 Things to do:
-* Elemental Resistances
 * Status effects
   * FAST/SLOW
-* Equipment
 * Items
   * Potions and such
   * Weapons as items
