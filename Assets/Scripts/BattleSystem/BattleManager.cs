@@ -645,10 +645,8 @@ public class BattleManager : MonoBehaviour
 			int chanceToHit = (m_baseChanceToHit + sourceParticipant.Accuracy () - attackerBlindPenalty + targetBlindBonus + targetWeakToAttackElementBonus) - targetParticipant.Evasion ();
 			int hitRoll = Random.Range (0, 200);
 
-			/*
-								If that
-								number is less than or equal to the Chance to Hit, the Hit connects. 0 is an
-								automatic hit, and 200 is an automatic miss. */
+			 // If that number is less than or equal to the Chance to Hit, the Hit connects. 0 is an automatic hit, and 200 is an automatic miss. 
+
 			if (hitRoll == 200)
 			{
 				//Miss
