@@ -3,10 +3,14 @@
 public enum ElementTypeMask
 {
 	None = 0,
-	Fire = 1 << 0,
-	Ice = 1 << 1,
-	Lightning = 1 << 2,
-	Earth = 1 << 3,
+	Status = 1 << 0,
+	Poison = 1 << 1,
+	Time = 1 << 2,
+	Death = 1 << 3,
+	Fire = 1 << 4,
+	Ice = 1 << 5,
+	Lightning = 1 << 6,
+	Earth = 1 << 7,
 }
 
 public static class ElementTypeMaskExtensions

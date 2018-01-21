@@ -3,11 +3,14 @@
 public enum StatusEffectMask
 {
 	None = 0,
-	Blind = 1 << 1,
-	Poison = 1 << 2,
-	Asleep = 1 << 3,
+	Dead = 1 << 0,
+	Petrified = 1 << 1,
+	Poisoned = 1 << 2,
+	Blind = 1 << 3,
 	Paralyzed = 1 << 4,
-	Dead = 1 << 5,
+	Asleep = 1 << 5,
+	Silenced = 1 << 6,
+	Confused = 1 << 7
 }
 
 public static class StatusEffectMaskMaskExtensions

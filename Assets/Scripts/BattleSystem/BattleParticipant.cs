@@ -36,4 +36,18 @@ public abstract class BattleParticipant : MonoBehaviour {
 	public abstract int Evasion();
 	public abstract int Defense();
 	public abstract int MagicDefense();
+
+	public bool IsIncapacitated()
+	{
+		//TODO: It is 2am and I'm sure there is a better way to write this.
+		if (statusEffect.ContainsStatus(StatusEffectMask.Dead) 
+			|| statusEffect.ContainsStatus(StatusEffectMask.Asleep) 
+			|| statusEffect.ContainsStatus(StatusEffectMask.Paralyzed)
+			|| statusEffect.ContainsStatus(StatusEffectMask.Petrified))
+		{
+			return true;
+		}
+
+		return false;
+	}
 }

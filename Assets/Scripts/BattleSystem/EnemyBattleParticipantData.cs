@@ -16,4 +16,5 @@ public class EnemyBattleParticipantData : BattleParticipantData
 	public ElementTypeMask attackElement;
 	public ElementTypeMask defenseWeakElement;
 	public ElementTypeMask defenseStrongElement;
+	public EnemyTypeMask enemyType;
 }

@@ -57,13 +57,13 @@ public class BattleManager : MonoBehaviour
 	private struct CombatAction
 	{
 		public BattleParticipant sourceParticipant;
-		public BattleParticipant targetParticipant;
+		public List<BattleParticipant> targetParticipant;
 		public CombatActionType actionType;
 		public MagicSpellData magicSpellData;
 	}
 
-	private List<PlayableBattleParticipant> m_playerPartyList = new List<PlayableBattleParticipant>();
-	private List<EnemyBattleParticipant> m_enemyPartyList = new List<EnemyBattleParticipant>();
+	private List<BattleParticipant> m_playerPartyList = new List<BattleParticipant>();
+	private List<BattleParticipant> m_enemyPartyList = new List<BattleParticipant>();
 	private Queue<CombatAction> m_combatActionQueue = new Queue<CombatAction>();
 	private BattleState m_currentBattleState = BattleState.startCombat;
 	private TargetState m_currentTargetState = TargetState.None;
@@ -407,7 +407,9 @@ public class BattleManager : MonoBehaviour
 		{
 			SuperLogger.Log("Select Spell! m_currentHero " + m_currentHero);
 
-			if (m_playerPartyList[m_currentHero].battleData.spellIndexArray.Length > 0)
+			PlayableBattleParticipant participant = (PlayableBattleParticipant)m_playerPartyList[m_currentHero];
+
+			if (participant.battleData.spellIndexArray.Length > 0)
 			{
 				m_currentTargetState = TargetState.Magic_Select;
 
@@ -452,11 +454,13 @@ public class BattleManager : MonoBehaviour
 
 					if (button is EnemyTargetButton)
 					{
-						action.targetParticipant = (button as EnemyTargetButton).battleParticipant;
+						action.targetParticipant = new List<BattleParticipant>();
+						action.targetParticipant.Add((button as EnemyTargetButton).battleParticipant);
 					}
 					else if (button is AllyTargetButton)
 					{
-						action.targetParticipant = (button as AllyTargetButton).battleParticipant;
+						action.targetParticipant = new List<BattleParticipant>();
+						action.targetParticipant.Add((button as AllyTargetButton).battleParticipant);
 					}
 					else
 					{
@@ -468,37 +472,46 @@ public class BattleManager : MonoBehaviour
 					m_combatActionQueue.Enqueue(action);
 					m_currentHero++;
 
-					SuperLogger.Log(action.sourceParticipant.participantName + " is targeting  " + action.targetParticipant.participantName);
+					SuperLogger.Log(action.sourceParticipant.participantName + " is targeting  " + action.targetParticipant[0].participantName);
 				}
 				break;
 			case TargetState.Magic_Target:
 				{
 					CombatAction action = new CombatAction();
 					action.sourceParticipant = m_playerPartyList[m_currentHero];
-
-					//TODO: Pull spell targeting type here from m_spellBeingTargeted
-
-					if (button is EnemyTargetButton)
-					{
-						action.targetParticipant = (button as EnemyTargetButton).battleParticipant;
-					}
-					else if (button is AllyTargetButton)
-					{
-						action.targetParticipant = (button as AllyTargetButton).battleParticipant;
-					}
-					else
-					{
-						action.targetParticipant = null;
-					}
-
 					action.magicSpellData = m_spellBeingTargeted;
 					action.actionType = CombatActionType.Magic;
+
+					if (m_spellBeingTargeted.targetType == TargetType.SingleEnemy)
+					{
+						if (button is EnemyTargetButton)
+						{
+							action.targetParticipant = new List<BattleParticipant>();
+							action.targetParticipant.Add((button as EnemyTargetButton).battleParticipant);
+						}
+						else
+						{
+							return;
+						}
+					}
+					else if (m_spellBeingTargeted.targetType == TargetType.SingleAlly)
+					{
+						if (button is AllyTargetButton)
+						{
+							action.targetParticipant = new List<BattleParticipant>();
+							action.targetParticipant.Add((button as AllyTargetButton).battleParticipant);
+						}
+						else
+						{
+							return;
+						}
+					}
 
 					m_combatActionQueue.Enqueue(action);
 					m_currentHero++;
 					m_spellBeingTargeted = null;
 
-					SuperLogger.Log(action.sourceParticipant.participantName + " is targeting  " + action.targetParticipant.participantName + " with spell " + action.magicSpellData.spellName);
+					SuperLogger.Log(action.sourceParticipant.participantName + " is targeting  " + action.targetParticipant[0].participantName + " with spell " + action.magicSpellData.spellName);
 				}
 				break;
 			case TargetState.Item_Target:
@@ -525,11 +538,51 @@ public class BattleManager : MonoBehaviour
 
 			if (m_playerPartyList[m_currentHero].currentMP >= magicSpellData.mpCost)
 			{
-				SuperLogger.Log("Select Target! m_currentHero " + m_currentHero);
-				m_currentTargetState = TargetState.Magic_Target;
 				m_spellBeingTargeted = magicSpellData;
 
-				m_heroMagicPanels[m_currentHero].gameObject.SetActive(false);
+				switch (magicSpellData.targetType)
+				{
+					case TargetType.AllAllies:
+					case TargetType.AllEnemies:
+					case TargetType.Caster:
+						{
+							CombatAction action = new CombatAction();
+							action.sourceParticipant = m_playerPartyList[m_currentHero];
+							action.magicSpellData = m_spellBeingTargeted;
+							action.actionType = CombatActionType.Magic;
+
+							//Add targets
+							if (magicSpellData.targetType == TargetType.AllAllies)
+							{
+								action.targetParticipant = m_playerPartyList;
+							}
+							else if (magicSpellData.targetType == TargetType.AllEnemies)
+							{
+								action.targetParticipant = m_enemyPartyList;
+							}
+							else
+							{
+								action.targetParticipant = new List<BattleParticipant>();
+								action.targetParticipant.Add(m_playerPartyList[m_currentHero]);
+							}
+
+							m_combatActionQueue.Enqueue(action);
+							m_heroMagicPanels[m_currentHero].gameObject.SetActive(false);
+							m_currentHero++;
+							m_spellBeingTargeted = null;
+						}
+						break;
+					case TargetType.SingleAlly:
+					case TargetType.SingleEnemy:
+					default:
+						{
+							SuperLogger.Log("Select Target! m_currentHero " + m_currentHero);
+							m_currentTargetState = TargetState.Magic_Target;
+							m_heroMagicPanels[m_currentHero].gameObject.SetActive(false);
+						}
+						break;
+				}
+
 			}
 			else
 			{
@@ -542,11 +595,17 @@ public class BattleManager : MonoBehaviour
 
 	#region Battle Logic
 	private void MonsterDecision()
-	{
+	{		
 		for (int i = 0; i < m_enemyPartyList.Count; ++i)
 		{
 			CombatAction action = new CombatAction ();
 			action.sourceParticipant = m_enemyPartyList[i];
+
+			if (action.sourceParticipant.currentHP <= 0 || action.sourceParticipant.statusEffect.ContainsStatus(StatusEffectMask.Asleep))
+			{
+				SuperLogger.Log(action.sourceParticipant.participantName + " is incapacitated.");
+				continue;
+			}
 
 			bool foundTarget = false;
 
@@ -574,11 +633,12 @@ public class BattleManager : MonoBehaviour
 
 				if (m_playerPartyList[index].currentHP > 0)
 				{
-					action.targetParticipant = m_playerPartyList[index];
+					action.targetParticipant = new List<BattleParticipant>();
+					action.targetParticipant.Add( m_playerPartyList[index]);
 					foundTarget = true;
 					action.actionType = CombatActionType.Fight;
 
-					SuperLogger.Log(action.sourceParticipant.participantName + " is targeting  " + action.targetParticipant.participantName);
+					SuperLogger.Log(action.sourceParticipant.participantName + " is targeting  " + action.targetParticipant[0].participantName);
 
 					m_combatActionQueue.Enqueue(action);
 				}
@@ -593,18 +653,23 @@ public class BattleManager : MonoBehaviour
 			CombatAction action = m_combatActionQueue.Dequeue ();
 
 			//TODO: Should check other debilitating statuses
-			if (action.sourceParticipant.currentHP > 0)
+			if (action.sourceParticipant.currentHP > 0 && !action.sourceParticipant.IsIncapacitated())				
 			{
 				switch (action.actionType)
 				{
 					case CombatActionType.Fight:
 						{
-							DoMeleeHitRoll(action.sourceParticipant, action.targetParticipant);
+							DoMeleeHitRoll(action.sourceParticipant, action.targetParticipant[0]);
 						}
 						break;
 					case CombatActionType.Magic:
 						{
-							DoMagicHitRoll(action.sourceParticipant, action.targetParticipant, action.magicSpellData);
+							for (int i = 0; i < action.targetParticipant.Count; ++i)
+							{
+								DoMagicHitRoll(action.sourceParticipant, action.targetParticipant[i], action.magicSpellData);
+							}
+
+							action.sourceParticipant.currentMP -= action.magicSpellData.mpCost;
 						}
 						break;
 					case CombatActionType.Item:
@@ -618,6 +683,10 @@ public class BattleManager : MonoBehaviour
 						}
 						break;
 				}
+			}
+			else
+			{
+				SuperLogger.Log(action.sourceParticipant.participantName + " is incapacitated");
 			}
 
 			UpdateHitPointText();
@@ -782,8 +851,6 @@ public class BattleManager : MonoBehaviour
 				DoMagicEffect(sourceParticipant, targetParticipant, magicSpellData, true);
 			}
 		}
-
-		sourceParticipant.currentMP -= magicSpellData.mpCost;
 	}
 
 	private void DoMagicEffect(BattleParticipant sourceParticipant, BattleParticipant targetParticipant, MagicSpellData magicSpellData, bool wasResisted)
@@ -792,50 +859,30 @@ public class BattleManager : MonoBehaviour
 		{
 			case SpellEffect.Damage:
 				{
-					// TODO:
-					// --If target is resistant to spell element, divide effectivity by 2
-					// --If the target is weak to spell element, multiply effectivity by 1.5
-
-					int spellDamage = 0;
-					int effectiveness =  magicSpellData.effectiveness;
-
-					if (targetParticipant.defenseWeakElement.ContainsElement(magicSpellData.element))
+					DoMagicDamage(sourceParticipant, targetParticipant, magicSpellData, wasResisted, false);
+				}
+				break;
+			case SpellEffect.UndeadDamage:
+				{
+					DoMagicDamage(sourceParticipant, targetParticipant, magicSpellData, wasResisted, true);
+				}
+				break;
+			case SpellEffect.StatusAilment:
+				{
+					StatusEffectMask statusToInflict = (StatusEffectMask)magicSpellData.effectiveness;
+					if (!targetParticipant.statusEffect.ContainsStatus(statusToInflict))
 					{
-						effectiveness /= 2;
+						targetParticipant.statusEffect |= statusToInflict;
+						SuperLogger.Log(sourceParticipant.participantName + " casts " + magicSpellData.spellName + " on " + targetParticipant.participantName + " and inflicts status " + (StatusEffectMask)statusToInflict);
 					}
-
-					if (targetParticipant.defenseStrongElement.ContainsElement(magicSpellData.element))
-					{
-						effectiveness *= 2;
-					}
-
-					if (wasResisted)
-					{
-						spellDamage = Random.Range(effectiveness, 2 * effectiveness);
-					}
-					else
-					{
-						spellDamage = 2 * (Random.Range(effectiveness, 2 * effectiveness));
-					}
-
-					SuperLogger.Log(sourceParticipant.participantName + " casts " + magicSpellData.spellName + " on " + targetParticipant.participantName + " for " + spellDamage + " damage.");
-
-					targetParticipant.currentHP -= spellDamage;
-
-					if (targetParticipant.currentHP <= 0)
-					{
-						SuperLogger.Log(targetParticipant.participantName + " has died!");
-						targetParticipant.currentHP = 0;
-						if (targetParticipant is PlayableBattleParticipant)
-						{
-							m_aliveHeros--;
-						}
-						else if (targetParticipant is EnemyBattleParticipant)
-						{
-							m_aliveMonsters--;
-							targetParticipant.gameObject.SetActive(false);
-						}
-					}
+				}
+				break;
+			case SpellEffect.HitDown:
+				{
+				}
+				break;
+			case SpellEffect.MoraleDown:
+				{
 				}
 				break;
 			case SpellEffect.Heal:
@@ -843,11 +890,111 @@ public class BattleManager : MonoBehaviour
 					DoMagicHeal(sourceParticipant, targetParticipant, magicSpellData);
 				}
 				break;
+			case SpellEffect.RestoreStatus:
+				{
+					StatusEffectMask statusToUndo = (StatusEffectMask)magicSpellData.effectiveness;
+					if (targetParticipant.statusEffect.ContainsStatus(statusToUndo))
+					{
+						targetParticipant.statusEffect &= ~statusToUndo;
+						SuperLogger.Log(sourceParticipant.participantName + " casts " + magicSpellData.spellName + " on " + targetParticipant.participantName + " and undoes status " + (StatusEffectMask)statusToUndo);
+					}
+				}
+				break;
+			case SpellEffect.DefenseUp:
+				{
+				}
+				break;
+			case SpellEffect.ResistElement:
+				{
+				}
+				break;
+			case SpellEffect.AttackUp:
+				{
+				}
+				break;
+			case SpellEffect.HitMultiplierUp:
+				{
+				}
+				break;
+			case SpellEffect.AttackAndAccuracyUp:
+				{
+				}
+				break;
+			case SpellEffect.EvasionDown:
+				{
+				}
+				break;
+			case SpellEffect.FullHeal:
+				{
+					targetParticipant.currentHP = targetParticipant.maxHP;
+				}
+				break;
+			case SpellEffect.EvasionUp:
+				{
+				}
+				break;
+			case SpellEffect.RemoveResistance:
+				{
+				}
+				break;
+			case SpellEffect.ThreeHundredHPStatus:
+				{
+				}
+				break;
 			default:
 				{
 					SuperLogger.Log("Should never happen.");
 				}
 				break;
+		}
+	}
+
+	private void DoMagicDamage(BattleParticipant sourceParticipant, BattleParticipant targetParticipant, MagicSpellData magicSpellData, bool wasResisted, bool onlyAffectUndead)
+	{
+		EnemyBattleParticipant targetAsEnemy = (targetParticipant as EnemyBattleParticipant);
+		if (onlyAffectUndead && targetAsEnemy != null && !targetAsEnemy.IsUndead())
+		{
+			return;
+		}
+
+		int effectiveness =  magicSpellData.effectiveness;
+		if (targetParticipant.defenseWeakElement.ContainsElement(magicSpellData.element))
+		{
+			effectiveness *= 2;
+		}
+
+		if (targetParticipant.defenseStrongElement.ContainsElement(magicSpellData.element))
+		{
+			effectiveness /= 2;
+		}
+
+		int spellDamage = 0;
+		if (wasResisted)
+		{
+			spellDamage = Random.Range(effectiveness, 2 * effectiveness);
+		}
+		else
+		{
+			spellDamage = 2 * (Random.Range(effectiveness, 2 * effectiveness));
+		}
+
+		SuperLogger.Log(sourceParticipant.participantName + " casts " + magicSpellData.spellName + " on " + targetParticipant.participantName + " for " + spellDamage + " damage.");
+
+		targetParticipant.currentHP -= spellDamage;
+
+		if (targetParticipant.currentHP <= 0)
+		{
+			SuperLogger.Log(targetParticipant.participantName + " has died!");
+			targetParticipant.currentHP = 0;
+			if (targetParticipant is PlayableBattleParticipant)
+			{
+				m_aliveHeros--;
+			}
+			else if (targetParticipant is EnemyBattleParticipant)
+			{
+				m_aliveMonsters--;
+				targetParticipant.gameObject.SetActive(false);
+			}
 		}
 	}
 

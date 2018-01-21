@@ -106,4 +106,9 @@ public class EnemyBattleParticipant : NonPlayableBattleParticipant {
 	{
 		return m_battleData.magicDefense;
 	}
+
+	public bool IsUndead()
+	{
+		return EnemyTypeMaskMaskExtensions.IsEnemyType(m_battleData.enemyType, EnemyTypeMask.Undead);
+	}
 }

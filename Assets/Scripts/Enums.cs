@@ -14,9 +14,24 @@ public enum Classes
 }
 
 public enum SpellEffect
-{
-	Heal,
+{	
 	Damage,
+	UndeadDamage,
+	StatusAilment,
+	HitDown,
+	MoraleDown,
+	Heal,
+	RestoreStatus,
+	DefenseUp,
+	ResistElement,
+	AttackUp,
+	HitMultiplierUp,
+	AttackAndAccuracyUp,
+	EvasionDown,
+	FullHeal,
+	EvasionUp,
+	RemoveResistance,
+	ThreeHundredHPStatus,
 }
 
 public enum SpecialEffect
