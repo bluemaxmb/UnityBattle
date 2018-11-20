@@ -68,7 +68,8 @@ public class BattleManager : MonoBehaviour
 	private BattleState m_currentBattleState = BattleState.startCombat;
 	private TargetState m_currentTargetState = TargetState.None;
 	private MagicSpellData m_spellBeingTargeted;
-	private const int m_baseChanceToHit = 168;
+	private const int kBaseChanceToHitMelee = 168;
+	private const int kBaseChanceToHitMagic = 148;
 	private int m_currentHero;
 	private int m_aliveHeros;
 	private int m_aliveMonsters;
@@ -149,7 +150,7 @@ public class BattleManager : MonoBehaviour
 
 	private void InitializeMonsterParty()
 	{
-		int monsterGroup = UnityEngine.Random.Range(0,2);
+		int monsterGroup = Random.Range(0,3);
 
 		SuperLogger.Log("monsterGroup: " + monsterGroup);
 
@@ -181,7 +182,7 @@ public class BattleManager : MonoBehaviour
 	//TODO: This is god awful We have three functions doing so much of the same shit and there is a better way to do this.
 	private void InitializeMonsterGroupZero()
 	{
-		int numMonsters = UnityEngine.Random.Range(1,9);
+		int numMonsters = Random.Range(1,10);
 
 		for (int i = 0; i < numMonsters; ++i)
 		{
@@ -203,7 +204,7 @@ public class BattleManager : MonoBehaviour
 
 	private void InitializeMonsterGroupOne()
 	{
-		int numMonsters = UnityEngine.Random.Range(1,4);
+		int numMonsters = Random.Range(1,5);
 
 		for (int i = 0; i < numMonsters; ++i)
 		{
@@ -230,8 +231,8 @@ public class BattleManager : MonoBehaviour
 
 	private void InitializeMonsterGroupTwo()
 	{
-		int numLargeMonsters = UnityEngine.Random.Range(1,3);
-		int numSmallMonsters = UnityEngine.Random.Range(1,5);
+		int numLargeMonsters = Random.Range(1,3);
+		int numSmallMonsters = Random.Range(1,7);
 
 		for (int i = 0; i < numLargeMonsters; ++i)
 		{
@@ -250,7 +251,7 @@ public class BattleManager : MonoBehaviour
 			m_aliveMonsters++;
 		}
 
-		for (int i = 0; i < numSmallMonsters; ++i)
+		for (int j = 0; j < numSmallMonsters; ++j)
 		{
 			GameObject tempObject = Instantiate(m_monsterPrefabs[0]);
 
@@ -262,7 +263,7 @@ public class BattleManager : MonoBehaviour
 			targetButton.onClick.AddListener(() => OnTargetClicked(targetButton));
 			targetButton.battleParticipant = newParticipant;
 
-			tempObject.transform.SetParent(m_monsterFormation3Placements[i + 2], false);
+			tempObject.transform.SetParent(m_monsterFormation3Placements[j + 2], false);
 
 			m_aliveMonsters++;
 		}
@@ -612,7 +613,7 @@ public class BattleManager : MonoBehaviour
 			while (!foundTarget)
 			{
 				int index = -1;
-				int choiceRoll = Random.Range (0, 100);
+				int choiceRoll = Random.Range (0, 101);
 
 				if (choiceRoll >= 50)
 				{
@@ -711,8 +712,8 @@ public class BattleManager : MonoBehaviour
 			int targetBlindBonus = targetParticipant.statusEffect.ContainsStatus(StatusEffectMask.Blind) ? 40 : 0;
 			int targetWeakToAttackElementBonus = targetParticipant.defenseWeakElement.ContainsElement(sourceParticipant.attackElement) ? 40 : 0;
 
-			int chanceToHit = (m_baseChanceToHit + sourceParticipant.Accuracy () - attackerBlindPenalty + targetBlindBonus + targetWeakToAttackElementBonus) - targetParticipant.Evasion ();
-			int hitRoll = Random.Range (0, 200);
+			int chanceToHit = (kBaseChanceToHitMelee + sourceParticipant.Accuracy () - attackerBlindPenalty + targetBlindBonus + targetWeakToAttackElementBonus) - targetParticipant.Evasion ();
+			int hitRoll = Random.Range (0, 201);
 
 			 // If that number is less than or equal to the Chance to Hit, the Hit connects. 0 is an automatic hit, and 200 is an automatic miss. 
 
@@ -812,12 +813,14 @@ public class BattleManager : MonoBehaviour
 			int hitRoll = 0;
 
 			//Only calculate this stuff for negative spells, ie not buffs or healing.
-			if (magicSpellData.spellEffect == SpellEffect.Damage)
+			if (magicSpellData.spellEffect == SpellEffect.Damage || magicSpellData.spellEffect == SpellEffect.StatusAilment)
 			{
-				Random.Range(0, 200);
+				hitRoll = Random.Range(0, 201);			
 				elementWeaknessBonus = targetParticipant.defenseWeakElement.ContainsElement(magicSpellData.element) ? 40 : 0;
-				chanceToHit = targetParticipant.defenseStrongElement.ContainsElement(magicSpellData.element) ? 0 : (m_baseChanceToHit + magicSpellData.accuracy) - targetParticipant.MagicDefense();
+				chanceToHit = targetParticipant.defenseStrongElement.ContainsElement(magicSpellData.element) ? 0 : (kBaseChanceToHitMagic + magicSpellData.accuracy) - targetParticipant.MagicDefense();
 				chanceToHit += elementWeaknessBonus;
+
+				SuperLogger.Log(sourceParticipant.participantName + " rolled a " + hitRoll + " on their spell. Chance to hit is: " + chanceToHit);
 			}
 
 			/*
@@ -831,8 +834,19 @@ public class BattleManager : MonoBehaviour
 			if (hitRoll == 200)
 			{
 				//Resisted
-				SuperLogger.Log(targetParticipant.participantName + " resisted " + sourceParticipant.participantName + "'s spell");
-				DoMagicEffect(sourceParticipant, targetParticipant, magicSpellData, true);
+				if (magicSpellData.spellEffect == SpellEffect.Damage)
+				{
+					SuperLogger.Log(targetParticipant.participantName + " resisted " + sourceParticipant.participantName + "'s spell");
+					DoMagicEffect(sourceParticipant, targetParticipant, magicSpellData, true);
+				}
+				else if (magicSpellData.spellEffect == SpellEffect.StatusAilment) // Missed or didn't effect
+				{
+					SuperLogger.Log(targetParticipant.participantName + " was not inflicted with " + sourceParticipant.participantName + "'s spell");
+				}
+				else
+				{
+					// Should anything happen here?
+				}
 			}
 			else if (hitRoll == 0)
 			{
@@ -971,11 +985,11 @@ public class BattleManager : MonoBehaviour
 		int spellDamage = 0;
 		if (wasResisted)
 		{
-			spellDamage = Random.Range(effectiveness, 2 * effectiveness);
+			spellDamage = Random.Range(effectiveness, (2 * effectiveness) + 1);
 		}
 		else
 		{
-			spellDamage = 2 * (Random.Range(effectiveness, 2 * effectiveness));
+			spellDamage = 2 * (Random.Range(effectiveness, (2 * effectiveness) + 1));
 		}
 
 		SuperLogger.Log(sourceParticipant.participantName + " casts " + magicSpellData.spellName + " on " + targetParticipant.participantName + " for " + spellDamage + " damage.");
@@ -1002,7 +1016,7 @@ public class BattleManager : MonoBehaviour
 	{
 		if (targetParticipant.currentHP > 0)
 		{
-			int healAmount = Random.Range (magicSpellData.effectiveness, 2 * magicSpellData.effectiveness);
+			int healAmount = Random.Range (magicSpellData.effectiveness, (2 * magicSpellData.effectiveness) + 1);
 			targetParticipant.currentHP += healAmount;
 
 			if (targetParticipant.currentHP > targetParticipant.maxHP)

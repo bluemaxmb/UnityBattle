@@ -1,7 +1,8 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 
-public abstract class BattleParticipant : MonoBehaviour {
+public abstract class BattleParticipant : MonoBehaviour
+{
 
 	[SerializeField] Button m_targetButton = null;
 
@@ -18,11 +19,11 @@ public abstract class BattleParticipant : MonoBehaviour {
 	protected ElementTypeMask m_defenseStrongElement;
 
 	public string participantName { get { return m_name; } }
-	public int maxHP { get { return m_maxHP; }  }
-	public int currentHP { get { return m_currentHP; } set { m_currentHP = value;} }
+	public int maxHP { get { return m_maxHP; } }
+	public int currentHP { get { return m_currentHP; } set { m_currentHP = value; } }
 	public int maxMP { get { return m_maxMP; } }
-	public int currentMP { get { return m_currentMP; } set { m_currentMP = value;} }
-	public int hitMultiplier { get { return m_hitMultiplier;} set { m_hitMultiplier = value; }}
+	public int currentMP { get { return m_currentMP; } set { m_currentMP = value; } }
+	public int hitMultiplier { get { return m_hitMultiplier; } set { m_hitMultiplier = value; } }
 	public StatusEffectMask statusEffect { get { return m_statusEffect; } set { m_statusEffect = value; } }
 	public ElementTypeMask attackElement { get { return m_attackElement; } set { m_attackElement = value; } }
 	public ElementTypeMask defenseWeakElement { get { return m_defenseWeakElement; } set { m_defenseWeakElement = value; } }
@@ -40,11 +41,12 @@ public abstract class BattleParticipant : MonoBehaviour {
 	public bool IsIncapacitated()
 	{
 		//TODO: It is 2am and I'm sure there is a better way to write this.
-		if (statusEffect.ContainsStatus(StatusEffectMask.Dead) 
-			|| statusEffect.ContainsStatus(StatusEffectMask.Asleep) 
+		if (statusEffect.ContainsStatus(StatusEffectMask.Dead)
+			|| statusEffect.ContainsStatus(StatusEffectMask.Asleep)
 			|| statusEffect.ContainsStatus(StatusEffectMask.Paralyzed)
 			|| statusEffect.ContainsStatus(StatusEffectMask.Petrified))
 		{
+			SuperLogger.Log(participantName + " has status effects: " + statusEffect);
 			return true;
 		}
 
