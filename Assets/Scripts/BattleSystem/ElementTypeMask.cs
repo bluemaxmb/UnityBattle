@@ -1,5 +1,6 @@
 ﻿using System;
 
+[Flags]
 public enum ElementTypeMask
 {
 	None = 0,

@@ -13,7 +13,8 @@ public abstract class BattleParticipant : MonoBehaviour
 	protected int m_maxMP;
 	protected int m_hitMultiplier = 1;
 
-	protected StatusEffectMask m_statusEffect;
+	protected StatusEffectMask m_statusEffectToInflict;
+	protected StatusEffectMask m_activeStatusEffect;
 	protected ElementTypeMask m_attackElement;
 	protected ElementTypeMask m_defenseWeakElement;
 	protected ElementTypeMask m_defenseStrongElement;
@@ -24,7 +25,8 @@ public abstract class BattleParticipant : MonoBehaviour
 	public int maxMP { get { return m_maxMP; } }
 	public int currentMP { get { return m_currentMP; } set { m_currentMP = value; } }
 	public int hitMultiplier { get { return m_hitMultiplier; } set { m_hitMultiplier = value; } }
-	public StatusEffectMask statusEffect { get { return m_statusEffect; } set { m_statusEffect = value; } }
+	public StatusEffectMask statusEffectToInflict { get { return m_statusEffectToInflict; } set { m_statusEffectToInflict = value; } }
+	public StatusEffectMask activeStatusEffect { get { return m_activeStatusEffect; } set { m_activeStatusEffect = value; } }
 	public ElementTypeMask attackElement { get { return m_attackElement; } set { m_attackElement = value; } }
 	public ElementTypeMask defenseWeakElement { get { return m_defenseWeakElement; } set { m_defenseWeakElement = value; } }
 	public ElementTypeMask defenseStrongElement { get { return m_defenseStrongElement; } set { m_defenseStrongElement = value; } }
@@ -41,13 +43,71 @@ public abstract class BattleParticipant : MonoBehaviour
 	public bool IsIncapacitated()
 	{
 		//TODO: It is 2am and I'm sure there is a better way to write this.
-		if (statusEffect.ContainsStatus(StatusEffectMask.Dead)
-			|| statusEffect.ContainsStatus(StatusEffectMask.Asleep)
-			|| statusEffect.ContainsStatus(StatusEffectMask.Paralyzed)
-			|| statusEffect.ContainsStatus(StatusEffectMask.Petrified))
+		if (activeStatusEffect.ContainsStatus(StatusEffectMask.Dead)
+			|| activeStatusEffect.ContainsStatus(StatusEffectMask.Petrified))
 		{
-			SuperLogger.Log(participantName + " has status effects: " + statusEffect);
+			SuperLogger.Log(participantName + " has status effects: " + activeStatusEffect);
 			return true;
+		}
+
+		return false;
+	}
+
+	public bool IsDebilitated()
+	{
+		//TODO: It is 2am and I'm sure there is a better way to write this.
+		if (activeStatusEffect.ContainsStatus(StatusEffectMask.Asleep)
+			|| activeStatusEffect.ContainsStatus(StatusEffectMask.Paralyzed))
+		{
+			SuperLogger.Log(participantName + " has status effects: " + activeStatusEffect);
+			return true;
+		}
+
+		return false;
+	}
+
+	public bool AttemptToRecoverFromDebilitation()
+	{
+		int RecoverChance = 0;
+		if (activeStatusEffect.ContainsStatus(StatusEffectMask.Asleep))
+		{
+			if (this as PlayableBattleParticipant)
+			{
+				RecoverChance = Random.Range(0, 4);
+			}
+			else
+			{
+				RecoverChance = Random.Range(0, 11);
+			}
+
+			if (RecoverChance == 0)
+			{
+				activeStatusEffect &= ~StatusEffectMask.Asleep;
+				SuperLogger.Log(participantName + " is now awake!");
+				return true;
+			}
+		}
+		else if (activeStatusEffect.ContainsStatus(StatusEffectMask.Paralyzed))
+		{
+			RecoverChance = Random.Range(0, 81);
+
+			if (RecoverChance < maxHP)
+			{
+				activeStatusEffect &= ~StatusEffectMask.Paralyzed;
+				SuperLogger.Log(participantName + " is cured of paralysis!");
+				return true;
+			}
+		}
+		else if (activeStatusEffect.ContainsStatus(StatusEffectMask.Confused))
+		{
+			RecoverChance = Random.Range(0, 4);
+
+			if (RecoverChance == 0)
+			{
+				activeStatusEffect &= ~StatusEffectMask.Asleep;
+				SuperLogger.Log(participantName + " is no longer confused!");
+				return true;
+			}
 		}
 
 		return false;

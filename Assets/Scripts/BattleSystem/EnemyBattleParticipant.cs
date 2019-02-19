@@ -25,13 +25,13 @@ public class EnemyBattleParticipant : NonPlayableBattleParticipant {
 		{
 		case EnemySizeClass.Small:
 			{
-				int index = UnityEngine.Random.Range(0,m_smallEnemyBattleData.Length);
+				int index = Random.Range(0,m_smallEnemyBattleData.Length);
 				m_battleData = m_smallEnemyBattleData[index];
 			}
 			break;
 		case EnemySizeClass.Large:
 			{
-				int index = UnityEngine.Random.Range(0,m_largeEnemyBattleData.Length);
+				int index = Random.Range(0,m_largeEnemyBattleData.Length);
 				m_battleData = m_largeEnemyBattleData[index];	
 			}
 			break;
@@ -52,7 +52,8 @@ public class EnemyBattleParticipant : NonPlayableBattleParticipant {
 		m_maxMP = m_currentMP = m_battleData.maxMP;
 		m_battleImage.sprite = m_battleData.battleSprite;
 
-		m_attackElement = m_battleData.attackElement;
+		m_statusEffectToInflict = m_battleData.StatusAttack;
+		m_attackElement = m_battleData.StatusAttackElement;
 		m_defenseWeakElement = m_battleData.defenseWeakElement;
 		m_defenseStrongElement = m_battleData.defenseStrongElement;
 }

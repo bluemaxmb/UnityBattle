@@ -1,5 +1,6 @@
 ﻿using System;
 
+[Flags]
 public enum EnemyTypeMask
 {
 	None = 0,

@@ -1,5 +1,6 @@
 ﻿using System;
 
+[Flags]
 public enum StatusEffectMask
 {
 	None = 0,

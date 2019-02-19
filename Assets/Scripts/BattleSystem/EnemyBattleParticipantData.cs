@@ -13,8 +13,10 @@ public class EnemyBattleParticipantData : BattleParticipantData
 	public byte morale;
 	public int goldValue;
 	public int expValue;
-	public ElementTypeMask attackElement;
-	public ElementTypeMask defenseWeakElement;
-	public ElementTypeMask defenseStrongElement;
-	public EnemyTypeMask enemyType;
+
+	[BitMask(typeof(StatusEffectMask))] public StatusEffectMask StatusAttack;
+	[BitMask(typeof(ElementTypeMask))] public ElementTypeMask StatusAttackElement;
+	[BitMask(typeof(ElementTypeMask))] public ElementTypeMask defenseWeakElement;
+	[BitMask(typeof(ElementTypeMask))] public ElementTypeMask defenseStrongElement;
+	[BitMask(typeof(EnemyTypeMask))] public EnemyTypeMask enemyType;
 }
